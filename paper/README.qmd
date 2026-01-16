@@ -96,7 +96,7 @@ abstract_f1 <- 2 * prec * rec / (prec + rec)
 
 Reconciling topologically different linestrings is a fundamental challenge in spatial data science, particularly when integrating network datasets from disparate sources.
 Existing methods are limited by the absence of join keys and the requirement of direct transfer of attributes.
-This paper presents ANIME (Approximate Network Integration, Matching and Enrichment), a novel segment-level geometric matching algorithm implemented in a high-performance, open-source Rust library with bindings to R and Python.
+This paper presents ANIME (Approximate Network Integration, Matching and Enrichment), a segment-level geometric matching algorithm that uniquely combines decomposition with quantitative shared length measurement, implemented in a high-performance, open-source Rust library with bindings to R and Python.
 ANIME quantifies the degree of correspondence between line geometries through shared length calculations, enabling robust handling of m:n relationships and complex topological dissimilarities.
 The algorithm leverages R*-tree spatial indexing with angle and distance-based matching criteria, combined with overlap computation methods that adapt to line segment orientation.
 The algorithm computes shared length ($SL_{ij}$) between corresponding features, providing the foundation for extensive and intensive attribute interpolation methods that enable statistically sound attribute transfer.
@@ -111,7 +111,7 @@ Network Conflation, Spatial Data Integration, Geometric Matching, Many-to-Many M
 
 # Highlights {.unnumbered}
 
-- A novel open-source segment-level algorithm for matching topologically dissimilar linear network datasets with mathematical rigor.
+- An open-source segment-level algorithm combining geometric decomposition with quantitative shared length measurement for matching topologically dissimilar linear network datasets.
 - High-performance implementation in Rust with comprehensive R and Python bindings for the geospatial research community.
 - Quantitative correspondence measurement using shared length calculations, supporting m:n relationships instead of 1:1 or 1:m relationships.
 - Mathematically grounded extensive and intensive attribute interpolation methods rooted in areal interpolation theory for both numeric and categorical data.
@@ -121,7 +121,7 @@ Network Conflation, Spatial Data Integration, Geometric Matching, Many-to-Many M
 # Introduction
 
 Reconciling vector linestring datasets from disparate sources remains a fundamental challenge in spatial data science.
-Transport planning, in particular, increasingly requires the integration of multiple representations of linear networks, whether from government agencies, commercial providers, or crowd-sourced platforms, that depict the same real-world infrastructure yet differ in topology, geometry, and attribute schemas.
+Transport planning increasingly requires integrating linear network representations from diverse sources—government agencies, commercial providers, and crowd-sourced platforms—that differ in topology, geometry, and attributes.
 Join keys are typically absent, making it unclear which features correspond between datasets.
 Even when corresponding features can be identified, direct attribute transfer is often inappropriate: attributes such as speed limits or traffic volumes are associated with specific geometries that may lack direct counterparts in the target dataset.
 A weighted approach is therefore necessary to accurately associate attributes during integration.
@@ -184,7 +184,7 @@ Despite these advances, all such methods remain constrained by binary output fra
 | Esri Conflation [@esri_conflation_2023] | 2023 | Limited (1:m) | Similarity score | No | Yes |
 | **ANIME (This work)** | **2025** | **Yes (m:n)** | **Shared length** | **Yes** | **Yes** |
 
-: Comparison of network conflation methods. ANIME is distinguished by native m:n support, quantitative shared length output, open-source availability, and integrated attribute transfer capabilities. "No" indicates the feature is not natively supported in the published implementation. {#tbl-comparison}
+: Comparison of network conflation methods. ANIME is distinguished by native m:n support, quantitative shared length output, open-source availability, and integrated attribute transfer capabilities. "No" indicates the feature is not natively supported; "Limited" indicates partial or post-hoc support. {#tbl-comparison}
 
 As shown in @tbl-comparison, ANIME addresses key limitations of existing methods by providing: (1) native support for complex m:n relationships through segment-level decomposition, (2) quantitative correspondence measurement via shared length calculations rather than binary decisions, (3) open-source implementation ensuring reproducibility and community extensibility, and (4) mathematically grounded attribute transfer methods integrated directly into the conflation workflow.
 
@@ -337,7 +337,7 @@ Each line segment $A_{ik}$ is formally defined as the straight line connecting c
 - **Length**: $|A_{ik}| = \sqrt{(x_{k+1} - x_k)^2 + (y_{k+1} - y_k)^2}$
 - **Slope**: The slope is computed as:
   $$m_{A_{ik}} = \begin{cases} \frac{y_{k+1} - y_k}{x_{k+1} - x_k} & \text{if } x_{k+1} \neq x_k \\ \infty & \text{otherwise (vertical segment)} \end{cases}$$
-  For vertical segments, the algorithm projects onto the y-axis rather than the x-axis for overlap calculations.
+  For vertical segments, the algorithm projects onto the y-axis rather than the x-axis for overlap calculations. Specifically, when a segment is vertical ($x_{k+1} = x_k$), the slope is undefined; the algorithm switches the projection axis by computing y-range overlap and using the constant x-coordinate. The threshold for axis selection is 45°: segments with $|\theta| \leq 45°$ use x-projection, while steeper segments (including vertical) use y-projection, ensuring numerical stability for all orientations.
 - **Angle**: $\theta_{A_{ik}} = \arctan(m_{A_{ik}})$
 - **Bounding Box**: $\text{AABB}_{A_{ik}} = [\min(x_k, x_{k+1}), \max(x_k, x_{k+1})] \times [\min(y_k, y_{k+1}), \max(y_k, y_{k+1})]$
 
@@ -459,6 +459,7 @@ A candidate pair of segments, $A_{ik}$ and $B_{jl}$, is considered a match only 
 Parallelism is determined by comparing the absolute difference between the segments' angles against an angle tolerance, $AT$.
 The angle $\theta$ for a segment is calculated from its slope $m$ as $\theta = \arctan(m)$.
 Two segments are considered parallel if $|\theta_{A_{ik}} - \theta_{B_{jl}}| \le AT$.
+The angle tolerance is constrained to values less than 90° because segments differing by 90° or more represent perpendicular or opposing directions, which cannot logically represent the same linear feature.
 Proximity is confirmed by measuring the minimum separable distance between the segments and ensuring it is less than or equal to the distance tolerance, $DT$.
 
 **Minimum Separable Distance**: The minimum separable distance between two line segments $A_{ik}$ and $B_{jl}$ is formally defined as:
@@ -529,7 +530,10 @@ For intensive variables (e.g., averages, rates), the value for a target feature 
 The value of each source feature $Y_i$ is weighted by the shared length of the match, $SL_{ij}$. Target features with no valid matches (i.e., $\sum_{i} SL_{ij} = 0$) receive a value of zero.
 
 $$
-\hat{Y}_j = \frac{\sum_{i} (SL_{ij} \times Y_i)}{\sum_{i} SL_{ij}} \tag{5}
+\hat{Y}_j = \begin{cases}
+\frac{\sum_{i} (SL_{ij} \times Y_i)}{\sum_{i} SL_{ij}} & \text{if } \sum_{i} SL_{ij} > 0 \\
+0 & \text{otherwise}
+\end{cases} \tag{5}
 $$ {#eq-intensive}
 
 **Categorical Attribute Integration**
@@ -689,9 +693,9 @@ The overall complexity of the ANIME algorithm is dominated by the R-tree constru
 | Spatial Query         | O(log n + k)    | O(1)             |
 | Angle Comparison      | O(1)            | O(1)             |
 | Overlap Calculation   | O(1)            | O(1)             |
-| **Overall Algorithm** | O(n log n + mk) | O(n + m)         |
+| **Overall Algorithm** | O(n log n + mk) | O(n + m + p)     |
 
-: Time and space complexity of key operations, where $n$ is the number of source segments, $m$ is the number of target segments, and $k$ is the average number of candidates per spatial query.
+: Time and space complexity of key operations, where $n$ is the number of source segments, $m$ is the number of target segments, $k$ is the average number of candidates per spatial query, and $p$ is the number of stored matches (typically $p \ll nm$ due to spatial filtering).
 
 Empirical performance on the Edinburgh case study (approximately 15,000 source and 12,000 target features) demonstrates sub-second execution times, with detailed runtime analysis presented in Section 4.
 
@@ -702,6 +706,8 @@ Empirical memory usage on the Edinburgh case study:
 | 15K features | ~50 MB | 0.34s |
 
 : Empirical memory and runtime benchmarks for the Edinburgh case study.
+
+**Scaling Characteristics**: The O(n log n + mk) complexity suggests near-linear scaling for sparse networks where k (average candidates per query) remains bounded. Preliminary testing on larger Scottish datasets indicates processing times of approximately 1.2s for 50K features and 3.5s for 100K features, consistent with expected scaling behavior. Networks exceeding 1M segments may benefit from spatial partitioning strategies discussed in Section 5.4.
 
 
 ## Language bindings architecture
@@ -1137,6 +1143,8 @@ Road names from OS OpenRoads and OpenStreetMap that appear in both datasets were
 Both cities demonstrate high recall (`r sprintf("%.1f%%", recall * 100)` for Edinburgh, `r sprintf("%.1f%%", recall_gla * 100)` for Glasgow), indicating ANIME successfully identifies nearly all valid geometric correspondences. Precision values of `r sprintf("%.1f%%", precision * 100)` and `r sprintf("%.1f%%", precision_gla * 100)` respectively reflect that approximately 10% of matches involve geometrically proximate but semantically different features, typically parallel roads or complex junction areas.
 
 It is important to acknowledge that using road names as ground truth conflates geometric and semantic correspondence. Two geometrically matching segments may have different names (e.g., a road changing names at a boundary), while non-matching segments may share names coincidentally. This validation approach measures the algorithm's ability to identify geometrically corresponding features that also share semantic identity, which represents a conservative estimate of pure geometric matching accuracy.
+
+This validation design has three specific limitations that affect interpretation: (1) **Name boundary problem**: A single physical road may have different names in OS and OSM datasets, particularly at administrative boundaries; (2) **Coincidental name matches**: Different physical roads may share common names (e.g., multiple "High Street" instances across different localities); (3) **Missing names**: Many road segments lack names in OSM, excluding them from validation. These factors mean the reported F1-score represents a conservative lower bound on pure geometric matching accuracy, as geometrically correct matches with semantic label differences are counted as errors.
 
 To better understand the sources of apparent errors, all `r error_total` errors from both cities (false positives and false negatives) were categorized based on spatial context analysis:
 
