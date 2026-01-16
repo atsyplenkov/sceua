@@ -19,7 +19,7 @@ editor:
 
 ```{r}
 #| eval: false
-quarto::quarto_render("cover_letter.qmd")
+quarto::quarto_render("paper/COVER_LETTER.qmd")
 ```
 
 Dear Editor-in-Chief,
