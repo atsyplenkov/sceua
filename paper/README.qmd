@@ -247,11 +247,11 @@ ANIME employs segment-level geometric analysis to quantify partial overlaps with
 
 This work aims to address the limitations of existing methods through four primary research objectives:
 
-1.  **Develop a quantitative correspondence framework** that measures degrees of geometric overlap rather than binary matching decisions, enabling precise representation of partial correspondences between network features.
+1.  **Develop a quantitative correspondence framework** that measures degrees of geometric overlap rather than binary matching decisions, enabling precise representation of partial correspondences between `LineString` features.
 
 2.  **Establish mathematical foundations** for weighted attribute transfer through rigorous geometric analysis and spatial interpolation theory.
 
-3.  **Design and implement** a high-performance algorithmic solution that scales efficiently for large network datasets while maintaining broad accessibility across programming environments.
+3.  **Design and implement** a high-performance algorithmic solution that scales efficiently for large `LineString` datasets while maintaining broad accessibility across programming environments.
 
 4.  **Validate the approach** through comprehensive testing on real-world transportation networks to demonstrate practical applicability and effectiveness.
 
@@ -270,12 +270,12 @@ This section establishes the mathematical foundation of ANIME, which consists of
 
 ### Algorithm parameters
 
-The ANIME matching algorithm operates on two sets of linestring features with algorithm parameters summarized in @tbl-variables-parameters.
+The ANIME matching algorithm operates on two sets of `LineString` features with algorithm parameters summarized in @tbl-variables-parameters.
 
 | Variable/Parameter           | Symbol    | Description                                                                    |
 | ---------------------------- | --------- | ------------------------------------------------------------------------------ |
-| Source features              | $A$       | The input `FeatureCollection` from which attributes are transferred           |
-| Target features              | $B$       | The input `FeatureCollection` to which features are being matched             |
+| Source features              | $A$       | An array of `LineString` geometries from which attributes are transferred     |
+| Target features              | $B$       | An array of `LineString` geometries to which features are being matched       |
 | Distance Tolerance           | $DT$      | The maximum Euclidean distance for segment matching (in map units)            |
 | Angle Tolerance              | $AT$      | The maximum angle difference (degrees) for parallel segment consideration     |
 
@@ -296,7 +296,7 @@ The ANIME matching algorithm operates on two sets of linestring features with al
 : Mathematical notation used throughout this paper {#tbl-notation}
 
 
-Each LineString in datasets $A$ and $B$ is formally decomposed into its component line segments:
+Each `LineString` in datasets $A$ and $B$ is formally decomposed into its component line segments:
 
 - $A_{ik}$: The $k$-th line segment of the $i$-th LineString in source dataset $A$
 - $B_{jl}$: The $l$-th line segment of the $j$-th LineString in target dataset $B$
@@ -304,7 +304,7 @@ Each LineString in datasets $A$ and $B$ is formally decomposed into its componen
 The matching process is performed at the segment level to provide a granular assessment of correspondence.
 This process involves five main steps:
 
-1. **Linestring decomposition**: Breaking down each LineString into constituent line segments
+1. **`LineString` decomposition**: Breaking down each `LineString` into constituent line segments
 2. **AABB calculation and spatial indexing**: Computing bounding boxes and constructing R-trees for efficient spatial queries  
 3. **Candidate identification**: Using spatial indexing to find potentially matching segment pairs
 4. **Match selection**: Filtering candidates based on geometric constraints (angle and distance tolerances)
@@ -324,11 +324,11 @@ The output includes pre-computed weighted proportions for convenience:
 
 This design separates the core geometric matching from subsequent attribute interpolation applications.
 
-### Linestring decomposition
+### `LineString` decomposition
 
-Linestring decomposition forms the foundational step that distinguishes ANIME from feature-level matching approaches. Each LineString geometry is systematically decomposed into its constituent line segments, enabling granular geometric analysis that is essential for handling complex topological relationships.
+`LineString` decomposition forms the foundational step that distinguishes ANIME from feature-level matching approaches. Each `LineString` geometry is systematically decomposed into its constituent line segments, enabling granular geometric analysis that is essential for handling complex topological relationships.
 
-**Mathematical Definition**: For a LineString $L_i$ defined by an ordered sequence of vertices $\{v_1, v_2, \ldots, v_n\}$ where $v_k = (x_k, y_k)$, the decomposition yields $(n-1)$ line segments:
+**Mathematical Definition**: For a `LineString` $L_i$ defined by an ordered sequence of vertices $\{v_1, v_2, \ldots, v_n\}$ where $v_k = (x_k, y_k)$, the decomposition yields $(n-1)$ line segments:
 
 $$A_{ik} = \overline{v_k v_{k+1}} \text{ for } k = 1, 2, \ldots, n-1 \tag{1}$$ {#eq-decomposition}
 
@@ -561,7 +561,7 @@ While Section 2 established the mathematical foundations and algorithm design, t
 \begin{algorithm}
 \caption{Approximate Network Matching}
 \begin{algorithmic}
-\State // Initialize R-trees for LineString components in sets A and B
+\State // Initialize R-trees for `LineString` components in sets A and B
 \Procedure{ApproxNetworkMatch}{$A, B, DT, AT$}
   \State $Tree_A \gets$ InitializeEmptyRTree()
   \For{each $A_{ik} \in A$}
@@ -624,7 +624,7 @@ ANIME follows a multi-layered architecture with a high-performance Rust core foc
 **Rust Core Algorithm**: The high-performance engine is implemented in Rust and leverages R*-tree spatial indexing. Key components include:
 
 - **Spatial Indexing Engine**: An R*-tree implementation for efficient geometric queries.
-- **Geometric Processing**: Algorithms for linestring decomposition, slope calculation, and shared length computation.
+- **Geometric Processing**: Algorithms for `LineString` decomposition, slope calculation, and shared length computation.
 
 ### Data structures
 
@@ -678,7 +678,7 @@ The ANIME algorithm incorporates several performance optimizations to ensure eff
 - **Algorithmic Strategies**:
 
     - **Early Filtering**: Applies inexpensive angle and distance checks to prune candidate pairs before performing complex overlap calculations.
-    - **Segment-Level Processing**: Decomposes linestrings into individual segments for granular matching, avoiding computationally intensive comparisons of entire features.
+    - **Segment-Level Processing**: Decomposes `LineString` geometries into individual segments for granular matching, avoiding computationally intensive comparisons of entire features.
     - **OnceCell Pattern**: Caches match results to prevent redundant computations for the same feature pairs.
   
 - **Memory Management**:
@@ -735,7 +735,7 @@ This section demonstrates ANIME's practical application and scalability through 
 The experimental design involves matching diverse source networks from the NPTScot (Network Planning Tool Scotland) project and OpenStreetMap (OSM) to the Ordnance Survey (OS) Open Road network (target), representing a realistic large-scale multi-source conflation scenario characteristic of national transport planning applications.
 Validation was conducted across two Scottish cities, Edinburgh and Glasgow, to demonstrate generalizability across different urban morphologies.
 
-The case study evaluates ANIME's capability across four distinct attribute types that collectively demonstrate the algorithm's versatility in diverse data integration scenarios:
+The case study evaluates ANIME's capability across four distinct attribute types that collectively demonstrate the algorithm's versatility across data integration scenarios:
 
 1. **Go Dutch cycling potential (extensive variable)**: Cycling flow volumes from the NPT project under a hypothetical policy scenario, evaluating ANIME's capacity to aggregate values from multiple source features to single target features (n:1 relationships) through length-weighted summation.
 
@@ -745,7 +745,7 @@ The case study evaluates ANIME's capability across four distinct attribute types
 
 4. **Speed limit (discrete numeric)**: Posted speed limits from OSM data, evaluating ANIME's capability to handle discrete numerical values and compute appropriate weighted averages for target features.
 
-The source networks exhibit complex geometric representations, with OSM employing separate linestrings for each side of a street and individual lines for cycling pavements and dedicated lanes. In contrast, the target network (OS Open Roads) utilizes simplified geometry, representing each street as a single linestring regardless of lane count or adjacent infrastructure.
+The source networks exhibit complex geometric representations, with OSM employing separate `LineString` geometries for each side of a street and individual lines for cycling pavements and dedicated lanes. In contrast, the target network (OS Open Roads) utilizes simplified geometry, representing each street as a single `LineString` regardless of lane count or adjacent infrastructure.
 This configuration evaluates ANIME's capacity to handle complex-to-simplified matching across multiple data sources simultaneously, requiring aggregation from detailed geometric representations to generalized network structures: a challenging scenario that traditional conflation approaches struggle to address comprehensively.
 
 ## Parameter selection guidance
@@ -1246,11 +1246,11 @@ The case study illustrates how ANIME can address key limitations of existing net
 Across the studied networks, ANIME identified and quantified complex geometric relationships between topologically dissimilar representations and produced weighted correspondence metrics suitable for length-weighted attribute transfer.
 The following analysis highlights key algorithmic properties illustrated:
 
-**M:N Relationship Handling**: The results demonstrate ANIME's robust handling of one-to-many and many-to-one correspondences, wherein single features in one network match multiple features in another.
-This capability proves essential for real-world conflation scenarios where network representations differ in geometric complexity and feature granularity.
+**M:N Relationship Handling**: The results demonstrate ANIME's robust handling of one-to-many and many-to-one correspondences, wherein single features in one dataset match multiple features in another.
+This capability proves essential for real-world conflation scenarios where `LineString` representations differ in geometric complexity and feature granularity.
 While recent methods such as Voronoi-based approaches [@wu_voronoi_2023] and subgraph growing algorithms [@nguyen_apsg_2022] also support m:n matching, ANIME uniquely provides quantitative overlap measures rather than binary match decisions.
 
-**Quantitative Correspondence Assessment**: Unlike binary matching approaches, ANIME quantifies precise degrees of overlap between network features through shared length calculations.
+**Quantitative Correspondence Assessment**: Unlike binary matching approaches, ANIME quantifies precise degrees of overlap between `LineString` features through shared length calculations.
 This enables nuanced decision-making regarding match quality and provides mathematical foundation for weighted attribute integration.
 Traditional similarity measures catalogued in prior surveys [@xavier_survey_2016] provide match scores but not proportional overlap values suitable for attribute apportionment.
 
@@ -1265,7 +1265,7 @@ The shared length metric ($SL_{ij}$) provides a natural basis for confidence wei
 
 ## Limitations and boundary conditions
 
-While ANIME demonstrates robust performance across diverse scenarios, several limitations warrant consideration for practitioners and future development.
+While ANIME demonstrates robust performance across the tested scenarios, several limitations warrant consideration for practitioners and future development.
 
 ### Geometric constraints
 
@@ -1350,7 +1350,7 @@ Future work could extend the capabilities of the algorithm in several key areas.
 **Enhanced Geometric Processing:**
 
 - Implementation of additional shape similarity measures beyond angle-based matching
-- Support for curved linestring matching utilizing advanced geometric algorithms
+- Support for curved `LineString` matching utilizing advanced geometric algorithms
 - Integration of topology-aware matching for complex network structures
 
 **Performance Optimization:**
