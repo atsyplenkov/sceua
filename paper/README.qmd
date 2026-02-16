@@ -128,7 +128,7 @@ The algorithm uses R*-tree spatial indexing with angle and distance-based matchi
 The shared lengths ($SL_{ij}$) between features enable extensive and intensive attribute interpolation methods for accurate attribute transfer.
 ANIME is implemented in `anime`, a Rust crate with bindings to R and Python packages.
 A case study on Scottish transport networks demonstrates effective handling of generalized-to-detailed geometry matching and multi-source attribute integration, achieving `r sprintf("%.1f%%", abstract_f1 * 100)` F1-score accuracy in validation experiments.
-The implementation processes networks of 15,000+ features in sub-second time, with applications demonstrated in transport planning and potential extensions to hydrographic conflation, ecological modeling, and infrastructure management.
+The implementation processes networks of 15,000+ features in sub-second time, with applications demonstrated in transport planning.
 
 # Keywords {.unnumbered}
 
