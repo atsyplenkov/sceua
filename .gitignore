@@ -1,10 +1,5 @@
 target
 data/
-paper/README.aux
-paper/README.html
-paper/README.log
-paper/README.pdf
-paper/README.rmarkdown
-paper/README.tex
-paper/README_cache/
-paper/README_files/
+paper/**
+!paper/
+!paper/**/*.qmd
