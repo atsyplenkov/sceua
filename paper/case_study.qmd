@@ -171,13 +171,15 @@ npt_attrs <- st_drop_geometry(npt_sf)
 npt_attrs$source_id <- 1:nrow(npt_sf)
 match_df_1_attr <- merge(match_df_1, npt_attrs, by = "source_id")
 
-# Bicycle infrastructure transfer using sum aggregation with target weighting
-bicycle_transfer <- match_df_1_attr %>%
-  group_by(target_id) %>%
-  summarise(
-    go_dutch = sum(all_fastest_bicycle_go_dutch * target_weighted, na.rm = TRUE),
-    .groups = 'drop'
+# Bicycle infrastructure transfer using ANIME interpolation (extensive variable)
+# Flows are extensive, so we use interpolate_extensive()
+bicycle_transfer <- tibble::tibble(
+  target_id = target_sample_1$target_id,
+  go_dutch  = anime::interpolate_extensive(
+    x = npt_sf$all_fastest_bicycle_go_dutch,
+    matches = match_matrix_1
   )
+)
 
 # Integrate results back to target features
 target_integrated_1 <- merge(target_sample_1, bicycle_transfer, by = "target_id", all.x = TRUE)
