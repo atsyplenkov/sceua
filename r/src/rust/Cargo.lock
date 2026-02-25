@@ -1522,8 +1522,3 @@ dependencies = [
  "quote",
  "syn",
 ]
-
-[[patch.unused]]
-name = "extendr-api"
-version = "0.7.1"
-source = "git+https://github.com/extendr/extendr?rev=2c2749f5e9d13d5628399c8779c47d420246a4a1#2c2749f5e9d13d5628399c8779c47d420246a4a1"
