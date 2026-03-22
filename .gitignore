@@ -1,2 +1,6 @@
 target
+data/
+paper/**
+!paper/
+!paper/**/*.qmd
 r/src/rust/rust
