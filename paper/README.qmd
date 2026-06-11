@@ -593,9 +593,15 @@ While the core ANIME algorithm does not directly handle categorical variables, c
 
 @eq-extensive and @eq-intensive can then be used to integrate these dummy variables. Applying the extensive integration method (@eq-extensive) to $Y_{ik}$ yields the total length-weighted count of category $k$ transferred to the target feature. Applying the intensive integration method (@eq-intensive) yields the proportion of the matched length of the target feature that corresponds to category $k$. This approach is demonstrated in the R implementation.
 
+<!-- Parallel Line Attribute Integration (flow) -->
+
 # Core Implementation Architecture
 
 This section details the high-performance implementation of ANIME, which is written in Rust to ensure performance and portability, with bindings for R and Python for broad accessibility. The core algorithm leverages the `rstar` crate for R*-tree spatial indexing and is outlined in the pseudocode below. The following subsections describe its architectural design, data structures, and optimization strategies.
+
+<!-- add geoarrow mention citation here
+we may want to mention that calculations are done using the geo crate with citation as well here or later on
+ -->
 
 While Section 2 established the mathematical foundations and algorithm design, this section focuses on software engineering decisions and implementation architecture that enable high-performance execution.
 
@@ -668,39 +674,54 @@ While Section 2 established the mathematical foundations and algorithm design, t
 
 ## System architecture
 
-ANIME follows a multi-layered architecture with a high-performance Rust core focused on geometric matching, complemented by language-specific bindings that provide attribute interpolation utilities for broad accessibility across the geospatial community.
+ANIME follows a multi-step architecture with a high-performance implementation written in the Rust programming langauge complemented by language-specific bindings that provide attribute interpolation utilities for broad accessibility across the geospatial community.
 
 ### Core components
 
-**Rust Core Algorithm**: The high-performance engine is implemented in Rust and leverages R*-tree spatial indexing. Key components include:
+**Core Algorithm**: The high-performance engine is implemented in Rust. Key components include:
 
 - **Spatial Indexing Engine**: An R*-tree implementation for efficient geometric queries.
 - **Geometric Processing**: Algorithms for `LineString` decomposition, slope calculation, and shared length computation.
+
+<!-- TODO mention parallelized computation via rayon? -->
 
 ### Data structures
 
 ANIME's implementation is built around several key data structures that enable efficient spatial matching and interpolation. The core `Anime` struct serves as the central coordinator, maintaining R*-tree spatial indices for both source and target networks, tolerance parameters, feature lengths, and computed matches. Supporting structures include `TarLine` for distance-buffered target segments and `MatchCandidate` for storing source-target relationships with shared lengths. Detailed mathematical specifications for all data structures are provided in Appendix A.
 
+<!-- is this too rust specific for a journal?? -->
+
 ## Geometric processing implementation
 
 The geometric processing subsystem handles overlap range calculation and line intersection solving. For segment pairs that pass angle and distance validation, the algorithm computes 1D overlap in either the x or y dimension (depending on segment orientation) and solves for the corresponding intersection points to determine shared length. Detailed mathematical formulations for overlap range calculation and line intersection solving are provided in Appendix A.
+
+<!-- what are we trying to get at here? this feels like it was written by claude. 
+there is no "subsystem"
+-->
 
 ## Attribute interpolation implementation
 
 The interpolation system implements the mathematical methods described in Section 2.3 using efficient Rust algorithms. The implementation provides robust handling of edge cases and optimized data structures for large-scale attribute transfer.
 
+<!-- there isn't an "interpolation system" feels written by Claude. That stresses me out. -->
+
 ### Implementation architecture
 
+<!-- so now it is an engine?  -->
 The interpolation engine is built around the following key components:
 
 - **Input Validation**: Ensures attribute arrays match the expected dimensions and data types
 - **Missing Value Handling**: Automatically excludes NaN and null values (represented as `f64::MAX`) from calculations, skipping these entries during weighted aggregation
+<!-- we can delete this? -->
 - **Memory Management**: Uses efficient data structures (BTreeMap) for storing and retrieving match relationships
+<!-- this feels contrived and unecessary? -->
 - **Numerical Stability**: Implements robust arithmetic operations to handle edge cases
+<!-- also feel contrived and uncessary -->
 
 ### Extensive interpolation implementation
 
 The extensive interpolation engine (implementing @eq-extensive) performs length-weighted distribution of source attributes:
+<!-- not an engine -->
 
 - **Input**: Source attribute vector and computed match table with shared lengths
 - **Processing**: Calculates proportional weights $w_{ij} = \frac{SL_{ij}}{\text{length}(i)}$ for each valid match
@@ -710,6 +731,7 @@ The extensive interpolation engine (implementing @eq-extensive) performs length-
 ### Intensive interpolation implementation
 
 The intensive interpolation engine (implementing @eq-intensive) computes length-weighted averages:
+<!-- not an engine -->
 
 - **Input**: Source attribute vector and computed match table with shared lengths
 - **Processing**: Calculates weighted means using shared lengths as weights. The implementation normalizes weights by target length for numerical consistency: $w_{ij} = SL_{ij}/\text{length}(j)$.
@@ -731,7 +753,10 @@ The ANIME algorithm incorporates several performance optimizations to ensure eff
     - **Early Filtering**: Applies inexpensive angle and distance checks to prune candidate pairs before performing complex overlap calculations.
     - **Segment-Level Processing**: Decomposes `LineString` geometries into individual segments for granular matching, avoiding computationally intensive comparisons of entire features.
     - **OnceCell Pattern**: Caches match results to prevent redundant computations for the same feature pairs.
+    <!-- claude had to have written this. this has nothing to do with the paper. -->
+
   
+<!-- this is unnecessary -->
 - **Memory Management**:
   
     - **BTreeMap Storage**: Employs efficient, sorted data structures for organizing and looking up matches.
@@ -780,6 +805,8 @@ ANIME is designed with a core Rust engine and a language-agnostic architecture t
 
 This architecture ensures that users in both ecosystems can benefit from the performance of the core Rust implementation while working with idiomatic interfaces and data structures.
 
+<!-- this is probably also entirely unecessary -->
+
 # Case Study
 
 This section demonstrates ANIME's practical application and scalability through a comprehensive case study utilizing multiple national transportation datasets.
@@ -789,6 +816,8 @@ Validation was conducted across two Scottish cities, Edinburgh and Glasgow, to d
 The case study evaluates ANIME's capability across four distinct attribute types that collectively demonstrate the algorithm's versatility across data integration scenarios:
 
 1. **Go Dutch cycling potential (extensive variable)**: Cycling flow volumes from the NPT project under a hypothetical policy scenario, evaluating ANIME's capacity to aggregate values from multiple source features to single target features (n:1 relationships) through length-weighted summation.
+
+<!-- i still don't know what go dutch is -->
 
 2. **Bus route presence (binary categorical)**: Binary indicators from OSM data identifying road segments serving as bus routes, examining ANIME's capability to transfer categorical data and compute proportional representations for mixed-category target features.
 
