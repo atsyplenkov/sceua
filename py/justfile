@@ -1,2 +1,0 @@
-develop:
-    uv tool run maturin develop
