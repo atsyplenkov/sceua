@@ -1,83 +1,40 @@
-# ANIME: Approximate Network Integration, Matching, and Enrichment
+<h1 align=center><code>sceua</code></h1>
+
+<p align="center">
+    <a href="https://github.com/atsyplenkov//releases">
+        <img src="https://img.shields.io/github/v/release/atsyplenkov/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=GitHub&logoColor=white"></a>
+    <a href="https://crates.io/crates/sceua/">
+        <img src="https://img.shields.io/crates/v/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>
+    <a href="https://codecov.io/gh/atsyplenkov/sceua">
+        <img src="https://img.shields.io/codecov/c/gh/atsyplenkov/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Codecov&logoColor=white"></a>
+    <br>
+    <a href="https://github.com/atsyplenkov/sceua/actions/workflows/ci.yml">
+        <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/ci.yml?style=flat&labelColor=1C2C2E&color=dea584&logo=GitHub%20Actions&logoColor=white"></a>
+    <a href="https://github.com/atsyplenkov/sceua/actions/workflows/rust-cd.yml">
+        <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/rust-cd.yml?style=flat&labelColor=1C2C2E&color=dea584&logo=GitHub%20Actions&logoColor=white&label=deploy"></a>
+    <a href="https://docs.rs/sceua/">
+        <img src="https://img.shields.io/docsrs/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>
+    <br>
+</p>
+
+<h4 align="center">
+  <a href="https://github.com/atsyplenkov/sceua/tree/main/rust">Rust crate</a> |
+  <a href="https://github.com/atsyplenkov/sceua/tree/main/r">R package</a>
+</h4>
 
 
-ANIME is a fast and efficient algorithm to perform partial linestring
-matching and attribute interpolation between two sets of linestrings.
+A Rust implementation and R bindings of **SCE-UA**, a Shuffle Complex Evolution Algorithm for Optimization by Duan et al. ([1992](https://onlinelibrary.wiley.com/doi/abs/10.1029/91WR02985)).
 
-The core algorithm is implemented in the `anime` Rust crate ([see Rust
-docs](https://docs.rs/anime/)) with bindings to the algorithm in both R
-and Python.
+This crate is a complete rewrite of the original SCE-UA implementation in [Matlab](https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method) and Fortran as found in Qingyun Duan's thesis [Appendix I](https://repository.arizona.edu/handle/10150/185655).
 
-## What it does
+# Rust
+`TBA`
 
-The `anime` algorithm calculates the approximate shared length between
-two sets of linestrings within a specified **distance** and **angle**
-tolerance.
+# R
+`TBA`
 
-For each source linestring, the distance of overlap with a target
-linestring is stored. The distance of overlap is then used to perform
-intensive or extensive interpolation of attributes.
+## Statement of the need
+I've been working recently on the `rtop` fork called `utop` which uses SCE-UA for variogram fitting. After running an R profiling I found that the лежащий в основе Fortran code is one of the major drawbacks. Since  ...
 
-## Example
-
-``` r
-library(sf)
-library(dplyr)
-library(anime)
-library(ggplot2)
-
-# get sample lines from package
-targets_fp <- system.file("extdata", "maine-osm-targets.fgb", package = "anime")
-sources_fp <- system.file("extdata", "maine-tigris-sources.fgb", package = "anime")
-
-# read files
-targets <- read_sf(targets_fp)
-sources <- read_sf(sources_fp)
-
-matches <- anime(
-    sources,
-    targets,
-    10, 5
-)
-
-# extract matches as a data.frame
-match_tbl <- get_matches(matches)
-match_tbl
-```
-
-    # A data frame: 23 × 5
-       target_id source_id shared_len source_weighted target_weighted
-     *     <int>     <int>      <dbl>           <dbl>           <dbl>
-     1         1         1       73.5           1.00            1.25 
-     2         2         1       50.0           0.680           0.933
-     3         3         1       73.5           1.00            0.991
-     4         4         2        0             0               0    
-     5         6         1        0             0               0    
-     6         7         2        0             0               0    
-     7         8         2        0             0               0    
-     8        11         1       18.7           0.255           0.752
-     9        12         2      170.            0.895           0.894
-    10        13         3      132.            0.983           0.993
-    # ℹ 13 more rows
-
-``` r
-# find most matched source
-most_matched_source <- count(match_tbl, source_id, sort = TRUE) |>
-  slice(1) |>
-  pull(source_id)
-
-# find the matched targets in the sf object
-matched_tars <- match_tbl |>
-  filter(source_id == most_matched_source, shared_len > 0) |>
-  inner_join(transmute(targets, target_id = row_number())) |>
-  st_as_sf()
-
-# visualize them
-ggplot() +
-  geom_sf(aes(color = shared_len), matched_tars, lwd = 2) +
-  geom_sf(data = sources[most_matched_source, ], lty = 2) +
-  scale_color_binned() +
-  theme_void()
-```
-
-![](README_files/figure-commonmark/unnamed-chunk-1-1.png)
+## Acknowledgements
+Thanks @josiah for setting up an anime monorepo showing how to structure Rust-based multi-language bindings.
