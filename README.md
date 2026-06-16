@@ -61,7 +61,7 @@ result <- sceua(
 
 ## Statement of need
 
-While working on a fork of the [`rtop`](https://cran.r-project.org/package=rtop) package (called `utop`), I found that the underlying Fortran implementation of SCE-UA used for variogram fitting was a major performance bottleneck. R profiling confirmed that the Fortran routine dominated runtime. Rewriting the algorithm in Rust with R bindings aims to provide a faster, safer, and more maintainable alternative for the R spatial-statistics community.
+While working on a fork of the [`rtop`](https://cran.r-project.org/package=rtop) package (called `utop`), I found that the underlying R implementation of SCE-UA used for variogram fitting was a major performance bottleneck. Rewriting the algorithm in Rust with R bindings aims to provide a faster, safer, and more maintainable alternative for the R spatial-statistics community.
 
 ## Acknowledgements
 
