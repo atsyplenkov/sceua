@@ -1,177 +1,43 @@
-
-
-<!-- README.md is generated from README.qmd. Please edit that file -->
-
-# anime
+# sceua
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
-The goal of anime is to join the attributes of two spatial datasets
-based on the amount of overlap between their linestrings.
+`sceua` provides R bindings to a Rust implementation of the Shuffled Complex
+Evolution - University of Arizona (SCE-UA) global optimisation algorithm
+(Duan et al., 1992).
 
 ## Installation
 
-You can install the development version of anime from
-[GitHub](https://github.com/) with:
+You need a Rust toolchain installed. Then install the development version
+from GitHub:
 
 ``` r
 # install.packages("pak")
-pak::pak("JosiahParry/anime/r")
+pak::pak("atsyplenkov/sceua/r")
 ```
 
-``` r
-library(anime)
-```
-
-## Basic example
-
-`anime` uses the concept of a `target` and `source` linestrings.
-
-`target` linestrings are matched *to* the `source` linestrings. The
-amount of overlap between the `target` and `source` linestrings can be
-used to *interpolate attributes* from the `source` *onto* the `target`
-geometries.
-
-> [!IMPORTANT]
->
-> Geometries *must* be planar—that is in a projected CRS.
+## Example
 
 ``` r
-target_fp <- "https://github.com/JosiahParry/anime/raw/refs/heads/main/r/data-raw/geojson/x_negative.geojson"
-source_fp <- "https://github.com/JosiahParry/anime/raw/refs/heads/main/r/data-raw/geojson/y_negative.geojson"
+library(sceua)
 
-# This is the source data
-source_geometry <- sf::read_sf(source_fp) 
-
-# This is the target data, the attributes in the source data will 
-# be added to the geometries of the target
-target <- sf::read_sf(target_fp) 
-
-plot(sf::st_geometry(source_geometry), col = source_geometry$value)
-plot(sf::st_geometry(target), add = TRUE)
-```
-
-<img src="man/figures/README-example-input-1.png"
-style="width:100.0%" />
-
-The lines are parallel but are not identical. The objective of `anime`
-is to find these partial matches.
-
-``` r
-matches <- anime::anime(
-  source = source_geometry,
-  target = target,
-  distance_tolerance = 0.5,
-  angle_tolerance = 5
+result <- sceua(
+  fn = function(x) sum(x^2),
+  lower = c(-5, -5),
+  upper = c(5, 5),
+  max_evaluations = 5000,
+  kstop = 5,
+  pcento = 1e-8,
+  seed = 1969,
+  complexes = 5
 )
 
-matches_tbl <- get_matches(matches)
-matches_tbl
-#> # A data frame: 4 × 5
-#>   target_id source_id shared_len source_weighted target_weighted
-#> *     <int>     <int>      <dbl>           <dbl>           <dbl>
-#> 1         1         1       1.58             0.5           0.767
-#> 2         2         3       1.12             0.5           0.528
-#> 3         2         2       1                0.5           0.472
-#> 4         3         3       1.12             0.5           0.959
+result
 ```
 
-We can use this information to join the attributes of the source data to
-the target data. In this example we take values from `source_geometry`
-and use `reframe()` to create a new data.frame of interpolated values.
+## References
 
-> [!NOTE]
->
-> `interpolate_intensive()` and `interpolate_extensive()` require
-> numeric variables from the `source` and return a numeric vector with
-> the same lengths as `target`.
-
-``` r
-library(dplyr)
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
-
-# interpolate values
-interpolated_from_source <- source_geometry |> 
-  reframe(value = interpolate_intensive(value, matches))
-
-# bind them together
-interpolated_target <- bind_cols(target, interpolated_from_source)
-```
-
-The result can be plotted as follows:
-
-``` r
-plot(interpolated_target["value"])
-```
-
-<img src="man/figures/README-unnamed-chunk-5-1.png"
-style="width:100.0%" />
-
-## Example with real data
-
-Imagine the following use case: we want to know how fast traffic moves
-on roads alongside the Leeds-Bradford cycle superhighway. Notice that
-the objects are transformed to `EPSG:27700` so that they are in a
-projected CRS\>
-
-``` r
-target_fp <- "https://github.com/nptscot/match_linestrings/releases/download/v0.1/leeds_bradford_cycle_superhighway_linestrings.geojson"
-source_fp <- "https://github.com/nptscot/match_linestrings/releases/download/v0.1/leeds_transport_network_near_superhighway.geojson"
-
-target <- sf::read_sf(target_fp) |>
-  sf::st_transform(27700)
-
-source_geometry <- sf::read_sf(source_fp) |>
-  sf::st_transform(27700) |>
-  transmute(value = as.numeric(gsub(" mph", "", maxspeed))) 
-
-plot(sf::st_geometry(target))
-plot(source_geometry, add = TRUE)
-```
-
-<img src="man/figures/README-cycle_superhighway_input-1.png"
-style="width:100.0%" />
-
-``` r
-# find matches
-matches <- anime::anime(
-  source = source_geometry,
-  target = target,
-  # 50 meters distance tolerance 
-  distance_tolerance = 50,
-  # 10° tolerance 
-  angle_tolerance = 10
-)
-
-target_interpolated <- target |> 
-  mutate(value = interpolate_intensive(source_geometry$value, matches))
-
-summary(source_geometry$value)
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#>    5.00   20.00   30.00   28.16   40.00   40.00     925
-summary(target_interpolated$value)
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#>    0.00    0.00   20.00   14.73   27.98   40.00     111
-```
-
-``` r
-library(ggplot2)
-
-ggplot() +
-  geom_sf(aes(color = value), data = source_geometry, alpha = 0.2) +
-  geom_sf(aes(color = value), data = sf::st_crop(target_interpolated, sf::st_bbox(source_geometry)))
-#> Warning: attribute variables are assumed to be spatially constant throughout
-#> all geometries
-```
-
-<img src="man/figures/README-unnamed-chunk-8-1.png"
-style="width:100.0%" />
+Duan, Q., Sorooshian, S., and Gupta, V.K., 1992. Effective and efficient
+global optimization for conceptual rainfall-runoff models.
+*Water Resources Research* 28 (4), 1015-1031.
