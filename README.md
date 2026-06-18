@@ -10,6 +10,8 @@
     <br>
     <a href="https://github.com/atsyplenkov/sceua/actions/workflows/ci.yml">
         <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/ci.yml?style=flat&labelColor=1C2C2E&color=dea584&logo=GitHub%20Actions&logoColor=white"></a>
+    <a href="https://github.com/atsyplenkov/sceua/actions/workflows/R-CMD-check.yaml">
+        <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/R-CMD-check.yaml?style=flat&labelColor=1C2C2E&color=276DC3&logo=GitHub%20Actions&logoColor=white"></a>
     <a href="https://docs.rs/sceua/">
         <img src="https://img.shields.io/docsrs/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>
     <br>
@@ -20,43 +22,77 @@
   <a href="https://github.com/atsyplenkov/sceua/tree/main/r">R package</a>
 </h4>
 
-A Rust implementation and R bindings of **SCE-UA**, the Shuffled Complex Evolution algorithm for global optimization developed by Duan et al. ([1992](https://onlinelibrary.wiley.com/doi/abs/10.1029/91WR02985)).
+A Rust implementation and R bindings of **SCE-UA**, the Shuffled Complex
+Evolution algorithm for global optimisation developed by Duan et al.
+([1992](https://onlinelibrary.wiley.com/doi/abs/10.1029/91WR02985)).
 
-SCE-UA combines deterministic simplex search, competitive evolution, and periodic shuffling of parallel complexes to robustly solve nonlinear, non-convex optimization problems. It was originally developed for hydrologic model calibration but is broadly applicable to any continuous parameter estimation task.
+SCE-UA combines deterministic simplex search, competitive evolution, and periodic
+shuffling of parallel complexes to solve nonlinear, non-convex, continuous
+parameter estimation problems. It was originally developed for hydrologic model
+calibration and remains widely used in hydrology and environmental modelling.
 
-This crate is a complete rewrite of the original SCE-UA implementation in [Matlab](https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method) and Fortran, as found in Qingyun Duan's thesis [Appendix I](https://repository.arizona.edu/handle/10150/185655).
+This crate is a complete rewrite in Rust of the original SCE-UA implementation in [Matlab](https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method) and Fortran, as found in Qingyun Duan's thesis [Appendix I](https://repository.arizona.edu/handle/10150/185655).
 
-> **Status**: The Rust core and R bindings are implemented. The R package is a work in progress towards a CRAN submission.
+
 
 ## Rust
 
-The Rust crate provides a fast, pure-Rust implementation of the SCE-UA algorithm with the following features:
-
-- `sceua::minimize(f, lower, upper, config)` — minimize an arbitrary objective function over bounded parameter ranges
-- Configurable algorithmic parameters (number of complexes, population size, convergence criteria)
-- Optional `rayon`-based parallelism via the `parallel` feature
+The Rust crate provides a fast, dependency-light SCE-UA implementation.
 
 ```rust
-use sceua::{Config, minimize};
+use sceua::{minimize, Config};
 
-let config = Config::default();
-let result = minimize(|x| x.iter().map(|v| v * v).sum::<f64>(), &[-5.0, -5.0], &[5.0, 5.0], config)?;
+let result = minimize(
+    |x| x.iter().map(|v| v * v).sum::<f64>(),
+    &[-5.0, -5.0],
+    &[5.0, 5.0],
+    Config::default(),
+)?;
 ```
+
+Features:
+
+- `sceua::minimize(f, lower, upper, config)` for serial optimisation.
+- Optional `rayon`-based parallel initial-population evaluation via the
+  `parallel` feature.
+- Deterministic, Fortran-compatible RAN1 generator.
+
+See [`rust/README.md`](rust/README.md) for details.
 
 ## R
 
-The R package will expose SCE-UA as a drop-in optimizer via the `rextendr` framework:
+The R package exposes SCE-UA as a conventional optimiser via the `rextendr` framework:
 
 ```r
 library(sceua)
 
-# Minimize the Rosenbrock function
 result <- sceua(
-  fn  = function(x) { (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2 },
+  fn = function(x) sum(x^2),
   lower = c(-5, -5),
-  upper = c(5, 5)
+  upper = c(5, 5),
+  max_evaluations = 5000,
+  kstop = 5,
+  pcento = 1e-8,
+  seed = 1969,
+  complexes = 5
 )
 ```
+
+Install from CRAN:
+
+```r
+# Not yet available
+# install.packages("sceua")
+```
+
+Or install the development version from GitHub (requires a Rust toolchain):
+
+```r
+# install.packages("pak")
+pak::pak("atsyplenkov/sceua/r")
+```
+
+See [`r/README.md`](r/README.md) for details.
 
 ## Statement of need
 
