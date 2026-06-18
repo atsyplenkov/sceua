@@ -26,22 +26,21 @@ SCE-UA combines deterministic simplex search, competitive evolution, and periodi
 
 This crate is a complete rewrite of the original SCE-UA implementation in [Matlab](https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method) and Fortran, as found in Qingyun Duan's thesis [Appendix I](https://repository.arizona.edu/handle/10150/185655).
 
-> **Status**: This project is currently a fork of [josiahparry/anime](https://github.com/JosiahParry/anime), used as a monorepo template for Rust+R bindings. The SCE-UA algorithm is planned but not yet implemented.
+> **Status**: The Rust core and R bindings are implemented. The R package is a work in progress towards a CRAN submission.
 
 ## Rust
 
-The Rust crate will provide a fast, pure-Rust implementation of the SCE-UA algorithm with the following features:
+The Rust crate provides a fast, pure-Rust implementation of the SCE-UA algorithm with the following features:
 
-- `sceua::minimize(f, lower, upper, ...)` — minimize an arbitrary objective function over bounded parameter ranges
+- `sceua::minimize(f, lower, upper, config)` — minimize an arbitrary objective function over bounded parameter ranges
 - Configurable algorithmic parameters (number of complexes, population size, convergence criteria)
-- `no_std`-compatible core with optional `rayon`-based parallelism
+- Optional `rayon`-based parallelism via the `parallel` feature
 
 ```rust
-// Planned API sketch
 use sceua::{Config, minimize};
 
 let config = Config::default();
-let (x_opt, f_opt) = minimize(rosenbrock, &[(-5.0, 5.0); 10], &config)?;
+let result = minimize(|x| x.iter().map(|v| v * v).sum::<f64>(), &[-5.0, -5.0], &[5.0, 5.0], config)?;
 ```
 
 ## R
