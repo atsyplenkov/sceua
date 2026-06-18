@@ -32,9 +32,9 @@ fn sceua_minimize(
     let mut objective = move |x: &[f64]| -> f64 {
         let x_robj = Robj::from(x.to_vec());
         match rfun.call(pairlist!(x = x_robj)) {
-            Ok(value) => value
-                .as_real()
-                .map_or_else(|| value.as_integer().map_or(f64::NAN, |v| v as f64), |v| v),
+            Ok(value) => value.as_real().unwrap_or_else(|| {
+                value.as_integer().map_or(f64::NAN, |v| v as f64)
+            }),
             Err(error) => {
                 if call_error_clone.borrow().is_none() {
                     *call_error_clone.borrow_mut() = Some(error);
