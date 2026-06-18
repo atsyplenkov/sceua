@@ -4,6 +4,7 @@ use sceua::{minimize, Config, OptimizationResult, TerminationReason};
 use std::cell::RefCell;
 use std::rc::Rc;
 
+#[allow(clippy::too_many_arguments)]
 #[extendr]
 fn sceua_minimize(
     fun: Robj,
