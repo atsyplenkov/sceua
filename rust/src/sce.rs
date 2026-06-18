@@ -40,6 +40,9 @@ pub enum TerminationReason {
     ParameterConvergence,
 }
 
+// SCEUA main routine.
+// https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L152-L399
+
 pub fn minimize<F>(
     mut objective: F,
     lower: &[f64],

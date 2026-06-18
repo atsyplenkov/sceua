@@ -26,6 +26,9 @@ pub(crate) fn random_point(lower: &[f64], upper: &[f64], rng: &mut DuanRng) -> V
         .collect()
 }
 
+// PARSTT computes normalised population std and geometric range. See
+// https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L552-L589
+
 pub(crate) fn parameter_stats(points: &[Point], lower: &[f64], upper: &[f64]) -> ParameterStats {
     let dimension = lower.len();
     let count = points.len() as f64;
@@ -84,6 +87,9 @@ pub(crate) fn normalized_distances(
         .collect()
 }
 
+// linear-probability sub-complex sampling before SORT1.
+// See https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L240-L267
+
 pub(crate) fn sample_simplex_indices(
     points_per_complex: usize,
     simplex_size: usize,
@@ -103,6 +109,9 @@ pub(crate) fn sample_simplex_indices(
     indices.sort_unstable();
     indices
 }
+
+// COMP drops the lowest-ranked complex during reduction.
+// See https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L618-L644
 
 pub(crate) fn compress_complexes(
     population: &[Point],

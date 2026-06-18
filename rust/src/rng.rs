@@ -1,3 +1,7 @@
+// NB: RAN1/GASDEV in FUSE SCE, kept in single precision to
+// match the original REAL arithmetic. See fortran source:
+// https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L788-L849
+
 #[derive(Clone, Debug)]
 pub(crate) struct DuanRng {
     idum: i64,

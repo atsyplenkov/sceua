@@ -1,5 +1,10 @@
 use crate::{error::SceuaError, population::Point, rng::DuanRng};
 
+// CCE subroutine.
+// reflection -> contraction -> Gaussian mutation sequence
+// See
+// https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L431-L546
+
 pub(crate) fn evolve_simplex<F>(
     simplex: &mut [Point],
     lower: &[f64],
