@@ -50,13 +50,6 @@ let result = minimize(
 )?;
 ```
 
-Features:
-
-- `sceua::minimize(f, lower, upper, config)` for serial optimisation.
-- Optional `rayon`-based parallel initial-population evaluation via the
-  `parallel` feature.
-- Deterministic, Fortran-compatible RAN1 generator.
-
 See [`rust/README.md`](rust/README.md) for details.
 
 ## R
