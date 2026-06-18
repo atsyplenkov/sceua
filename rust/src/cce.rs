@@ -5,6 +5,10 @@ use crate::{error::SceuaError, population::Point, rng::DuanRng};
 // See
 // https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L431-L546
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "CCE mirrors Duan's Fortran/Matlab argument list"
+)]
 pub(crate) fn evolve_simplex<F>(
     simplex: &mut [Point],
     lower: &[f64],
@@ -105,10 +109,10 @@ fn gaussian_point(
 ) -> Vec<f64> {
     let best = &simplex[0].x;
     let mut point = Vec::with_capacity(best.len());
-    for parameter in 0..best.len() {
+    for (parameter, &best_value) in best.iter().enumerate() {
         let bound = upper[parameter] - lower[parameter];
         loop {
-            let candidate = best[parameter] + normalized_std[parameter] * rng.gaussian() * bound;
+            let candidate = best_value + normalized_std[parameter] * rng.gaussian() * bound;
             if candidate >= lower[parameter] && candidate <= upper[parameter] {
                 point.push(candidate);
                 break;
