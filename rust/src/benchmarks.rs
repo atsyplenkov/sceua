@@ -1,5 +1,9 @@
 use crate::{minimize, Config};
 
+// Mirrors Duan's Matlab benchmark functions (`functn1.m`..`functn7.m`) and
+// the same bounds/optima used by `test_functn.m`.
+// see https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method
+
 fn goldstein_price(x: &[f64]) -> f64 {
     let x1 = x[0];
     let x2 = x[1];
@@ -108,6 +112,9 @@ fn assert_close(actual: f64, expected: f64, tolerance: f64) {
     );
 }
 
+// These optimum checks are direct copies of the documented Matlab test cases by Duan
+// https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method
+
 #[test]
 fn duan_test_functions_match_documented_optima() {
     assert_close(goldstein_price(&[0.0, -1.0]), 3.0, 1.0e-12);
@@ -127,6 +134,9 @@ fn duan_test_functions_match_documented_optima() {
         1.0e-12,
     );
 }
+
+// End-to-end tests use Duan's Matlab benchmark bounds
+// https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method
 
 #[test]
 fn sceua_minimizes_goldstein_price_with_duan_bounds() {

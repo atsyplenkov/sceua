@@ -106,6 +106,9 @@ mod tests {
         );
     }
 
+    // Golden values generated from Duan/FUSE Fortran RAN1 with seed 1969:
+    // https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L788-L824
+
     #[test]
     fn ran1_matches_duan_fortran_sequence() {
         let expected = [
@@ -125,6 +128,9 @@ mod tests {
             assert_close(rng.uniform(), expected);
         }
     }
+
+    // Golden values generated from Duan/FUSE Fortran GASDEV with static SAVE state:
+    // https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L829-L849
 
     #[test]
     fn gasdev_matches_duan_fortran_static_sequence() {

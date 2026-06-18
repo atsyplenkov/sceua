@@ -150,6 +150,9 @@ mod tests {
         Point { x: vec![x], value }
     }
 
+    // Mirrors Fortran CCE paths: reflection, contraction, mutation, and maxn stop.
+    // https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L431-L546
+
     #[test]
     fn cce_accepts_reflection_when_it_improves_worst_point() {
         let mut simplex = vec![point(0.0, 0.0), point(1.0, 1.0), point(2.0, 4.0)];

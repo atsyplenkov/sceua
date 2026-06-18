@@ -489,6 +489,9 @@ mod tests {
         assert_eq!(err, SceuaError::BoundsLengthMismatch { lower: 1, upper: 2 });
     }
 
+    // Full optimiser test identical to the Fortran version.
+    // https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L152-L399
+
     #[test]
     fn minimize_converges_on_two_dimensional_sphere() {
         let config = Config {
@@ -515,6 +518,9 @@ mod tests {
                 | TerminationReason::MaxEvaluations
         ));
     }
+
+    // Parallel initialization should preserve the serial trajectory after initial sampling.
+    // Serial trajectory source: https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L152-L399
 
     #[cfg(feature = "parallel")]
     #[test]

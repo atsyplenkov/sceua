@@ -148,6 +148,9 @@ mod tests {
         }
     }
 
+    // Mirrors Fortran PARSTT normalised std plus normalised geometric range
+    // https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L552-L589
+
     #[test]
     fn parstt_matches_duan_population_statistics() {
         let points = vec![
@@ -163,6 +166,9 @@ mod tests {
         assert!((stats.geometric_range - 0.75_f64.sqrt()).abs() < 1.0e-12);
     }
 
+    // Mirrors Fortran NORMDIST; used for reported population distance.
+    // https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L594-L613
+
     #[test]
     fn normdist_matches_duan_formula() {
         let points = vec![point(&[2.0, 6.0], 0.0), point(&[4.0, 0.0], 0.0)];
@@ -171,12 +177,18 @@ mod tests {
         assert!((distances[1] - 0.75).abs() < 1.0e-12);
     }
 
+    // Mirrors Fortran sub-complex selection formula and SORT1 ordering.
+    // https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L240-L267
+
     #[test]
     fn simplex_indices_follow_duan_linear_probability() {
         let mut rng = DuanRng::new(1969);
         let indices = sample_simplex_indices(5, 3, &mut rng);
         assert_eq!(indices, vec![0, 2, 3]);
     }
+
+    // Mirrors Fortran COMP complex-number reduction.
+    // https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L618-L644
 
     #[test]
     fn comp_drops_lowest_ranked_complex() {
