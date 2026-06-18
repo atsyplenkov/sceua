@@ -1,21 +1,19 @@
 [package]
-name = "anime"
+name = "sceua"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Approximate Network Matching, Integration, and Enrichment"
+description = "Shuffled Complex Evolution - University of Arizona global optimizer"
 license = "MIT OR Apache-2.0"
-keywords = ["geospatial", "gis", "network", "spatial", "transit"]
-categories = ["algorithms", "science", "science::geo"]
+keywords = ["optimization", "sce", "sce-ua", "duan"]
+categories = ["algorithms", "science"]
 
 [lib]
 crate-type = ["lib", "staticlib"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = []
+parallel = ["dep:rayon"]
 
 [dependencies]
-arrow = { workspace = true }
-geo = { workspace = true }
-geo-traits = { workspace = true }
-geo-types = { workspace = true }
-rstar = { workspace = true }
+rayon = { version = "1.11", optional = true }
