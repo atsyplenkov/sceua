@@ -123,8 +123,8 @@ workspace_dep_idx <- which(names(pkg_deps) %in% workspace_fields$members)
 
 for (idx in workspace_dep_idx) {
   .dep <- pkg_deps[[idx]]
-  .dep$path = NULL
-  .dep$workspace = TRUE
+  .dep$path <- NULL
+  .dep$workspace <- TRUE
   pkg_deps[[idx]] <- .dep
 }
 
