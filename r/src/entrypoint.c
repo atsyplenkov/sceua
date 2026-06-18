@@ -1,8 +1,10 @@
 // We need to forward routine registration from C to Rust
 // to avoid the linker removing the static library.
 
-void R_init_anime_extendr(void *dll);
+void R_init_sceua_extendr(void *dll);
+void register_extendr_panic_hook(void);
 
-void R_init_anime(void *dll) {
-    R_init_anime_extendr(dll);
+void R_init_sceua(void *dll) {
+    register_extendr_panic_hook();
+    R_init_sceua_extendr(dll);
 }

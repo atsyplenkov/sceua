@@ -1,7 +1,7 @@
 TARGET_DIR = ./rust/target
 LIBDIR = $(TARGET_DIR)/release
-STATLIB = $(LIBDIR)/libanime.a
-PKG_LIBS = -L$(LIBDIR) -lanime
+STATLIB = $(LIBDIR)/libsceua.a
+PKG_LIBS = -L$(LIBDIR) -lsceua
 
 all: C_clean
 
