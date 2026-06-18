@@ -1,18 +1,17 @@
 # see https://github.com/r-lib/pkgbuild/pull/157
 if (!requireNamespace("tomledit")) {
-  error("bootstrap.R requires `tomledit` to be installed.")
+  stop("bootstrap.R requires `tomledit` to be installed.")
 }
 
 if (!requireNamespace("fs")) {
-  error("bootstrap.R requires `fs` to be installed.")
+  stop("bootstrap.R requires `fs` to be installed.")
 }
 
 if (!requireNamespace("rextendr")) {
-  error("bootstrap.R requires `rextendr` to be installed.")
+  stop("bootstrap.R requires `rextendr` to be installed.")
 }
 
-
-# Logging utils ----------------------------------------------------------
+# Logging utils -----------------------------------------------------------
 
 .style <- function(text, code) {
   if (Sys.getenv("TERM") != "dumb") {
@@ -24,19 +23,19 @@ if (!requireNamespace("rextendr")) {
 
 info <- function(...) {
   msg <- paste(..., collapse = " ")
-  cat(.style("ℹ ", "1;36"), msg, "\n", sep = "")
+  cat(.style("* ", "1;36"), msg, "\n", sep = "")
   invisible(NULL)
 }
 
 warn <- function(...) {
   msg <- paste(..., collapse = " ")
-  cat(.style("⚠ ", "1;33"), msg, "\n", sep = "")
+  cat(.style("! ", "1;33"), msg, "\n", sep = "")
   invisible(NULL)
 }
 
-error <- function(...) {
+abort <- function(...) {
   msg <- paste(..., collapse = " ")
-  stop(.style(paste0("✖ ", msg), "1;31"), call. = FALSE)
+  stop(.style(paste0("x ", msg), "1;31"), call. = FALSE)
 }
 
 info("Bootstrapping rust dependencies")
@@ -46,7 +45,6 @@ library(tomledit)
 
 info("Reading Cargo.toml")
 # get R package crate name
-# FIXME make this programattic
 cargo_path <- "src/rust/Cargo.toml"
 cargo_toml <- read_toml(cargo_path)
 crate_name <- get_item(cargo_toml, c("package", "name"))
@@ -70,26 +68,23 @@ pkg_deps <- get_item(cargo_toml, "dependencies")
 
 # for each non_reg_dep:
 # create a new directory src/rust/{dep}
-workspace_toml <- read_toml(
-  file.path(pkg_metadata$workspace_root, "Cargo.toml")
-)
+workspace_toml <- read_toml(file.path(
+  pkg_metadata$workspace_root,
+  "Cargo.toml"
+))
 
 # extract workspace specific metadata from the manifest path
 workspace_fields <- get_item(workspace_toml, "workspace")
 
 # workspace members that are deps index:
-workspace_idx <- which(
-  pkg_metadata$packages$name %in% names(pkg_deps)
-)
+workspace_idx <- which(pkg_metadata$packages$name %in% names(pkg_deps))
 
-# get the member diirectory without absolute path
-workspace_member_dep_paths <- basename(
-  gsub(
-    pkg_metadata$workspace_root,
-    "",
-    dirname(pkg_metadata$packages$manifest_path[workspace_idx])
-  )
-)
+# get the member directory without absolute path
+workspace_member_dep_paths <- basename(gsub(
+  pkg_metadata$workspace_root,
+  "",
+  dirname(pkg_metadata$packages$manifest_path[workspace_idx])
+))
 
 # "." is the R package workspace info
 workspace_fields$members <- c(".", workspace_member_dep_paths)
@@ -113,10 +108,7 @@ for (.dep in non_reg_deps$path) {
 
 # insert the workspace settings into the R package's Cargo.toml
 info("Updating workspace settings!")
-new_cargo_toml <- insert_items(
-  cargo_toml,
-  workspace = workspace_fields
-)
+new_cargo_toml <- insert_items(cargo_toml, workspace = workspace_fields)
 
 # Remove workspace inheritance from package section since this file IS the workspace root
 pkg_section <- get_item(new_cargo_toml, "package")
@@ -137,10 +129,7 @@ for (idx in workspace_dep_idx) {
 }
 
 # insert the new deps
-new_cargo_toml <- insert_items(
-  new_cargo_toml,
-  dependencies = pkg_deps
-)
+new_cargo_toml <- insert_items(new_cargo_toml, dependencies = pkg_deps)
 
 info("Updated Cargo.toml:")
 cat(as.character(new_cargo_toml), sep = "\n")
