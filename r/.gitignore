@@ -6,3 +6,6 @@ src/rust/Cargo.lock
 src/Makevars
 src/Makevars.win
 /.quarto/
+
+*.Rcheck
+*.tar.gz
