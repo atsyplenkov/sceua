@@ -12,3 +12,4 @@
 ^vignettes/\.quarto$
 ^vignettes/\*_files$
 ^bootstrap\.R$
+^cran-comments\.md$
