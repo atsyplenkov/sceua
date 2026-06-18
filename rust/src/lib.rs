@@ -1,11 +1,11 @@
 mod cce;
 mod config;
+#[doc(hidden)]
+pub mod duan_test_func;
 mod error;
 mod population;
 mod rng;
 mod sce;
-#[doc(hidden)]
-pub mod duan_test_func;
 
 #[cfg(test)]
 mod duan_tests;

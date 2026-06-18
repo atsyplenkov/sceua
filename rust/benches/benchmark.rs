@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use sceua::{minimize, Config};
 use sceua::duan_test_func::*;
+use sceua::{minimize, Config};
 use std::time::Duration;
 
 #[cfg(feature = "parallel")]
