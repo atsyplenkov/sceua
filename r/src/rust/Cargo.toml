@@ -12,11 +12,3 @@ name = "sceua"
 [dependencies]
 extendr-api = "0.9.0"
 sceua = { workspace = true }
-
-[workspace]
-resolver = "2"
-members = [".", "rust"]
-package = { version = "0.0.1", edition = "2021", rust-version = "1.90" }
-dependencies = { sceua = { path = "rust", features = [
-] } }
-lints = { rust = { unsafe_code = "forbid" } }
