@@ -148,7 +148,6 @@ sceua <- function(
   result$history <- history
 
   structure(result, class = "sceua")
-  structure(result, class = "sceua")
 }
 
 #' @export
