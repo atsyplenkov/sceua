@@ -1,19 +1,19 @@
 <h1 align=center><code>sceua</code></h1>
 
 <p align="center">
-    <a href="https://github.com/atsyplenkov/sceua/releases">
+    <!--<a href="https://github.com/atsyplenkov/sceua/releases">
         <img src="https://img.shields.io/github/v/release/atsyplenkov/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=GitHub&logoColor=white"></a>
     <a href="https://crates.io/crates/sceua/">
-        <img src="https://img.shields.io/crates/v/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>
+        <img src="https://img.shields.io/crates/v/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>-->
     <a href="https://codecov.io/gh/atsyplenkov/sceua">
         <img src="https://img.shields.io/codecov/c/gh/atsyplenkov/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Codecov&logoColor=white"></a>
     <br>
-    <a href="https://github.com/atsyplenkov/sceua/actions/workflows/ci.yml">
-        <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/ci.yml?style=flat&labelColor=1C2C2E&color=dea584&logo=GitHub%20Actions&logoColor=white"></a>
+    <a href="https://github.com/atsyplenkov/sceua/actions/workflows/ci.yaml">
+        <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/ci.yaml?style=flat&labelColor=1C2C2E&color=dea584&logo=GitHub%20Actions&logoColor=white"></a>
     <a href="https://github.com/atsyplenkov/sceua/actions/workflows/R-CMD-check.yaml">
         <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/R-CMD-check.yaml?style=flat&labelColor=1C2C2E&color=276DC3&logo=GitHub%20Actions&logoColor=white"></a>
-    <a href="https://docs.rs/sceua/">
-        <img src="https://img.shields.io/docsrs/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>
+    <!--<a href="https://docs.rs/sceua/">
+        <img src="https://img.shields.io/docsrs/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>-->
     <br>
 </p>
 
