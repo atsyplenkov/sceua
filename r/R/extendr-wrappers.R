@@ -4,21 +4,13 @@
 
 #
 # This file was created with the following call:
-#   .Call("wrap__make_anime_wrappers", use_symbols = TRUE, package_name = "anime")
+#   .Call("wrap__make_sceua_wrappers", use_symbols = TRUE, package_name = "sceua")
 
 #' @usage NULL
-#' @useDynLib anime, .registration = TRUE
+#' @useDynLib sceua, .registration = TRUE
 NULL
 
-init_anime <- function(source, target, distance_tolerance, angle_tolerance) .Call(wrap__init_anime, source, target, distance_tolerance, angle_tolerance)
-
-interpolate_extensive_ <- function(source_var, anime) .Call(wrap__interpolate_extensive_, source_var, anime)
-
-interpolate_intensive_ <- function(source_var, anime) .Call(wrap__interpolate_intensive_, source_var, anime)
-
-get_matches_ <- function(anime) .Call(wrap__get_matches_, anime)
-
-anime_print_helper <- function(x) .Call(wrap__anime_print_helper, x)
+sceua_minimize <- function(fn, lower, upper, max_evaluations, kstop, pcento, seed, complexes, points_per_complex, simplex_size, evolution_steps, min_complexes, include_initial, initial_point, parameter_epsilon) .Call(wrap__sceua_minimize, fn, lower, upper, max_evaluations, kstop, pcento, seed, complexes, points_per_complex, simplex_size, evolution_steps, min_complexes, include_initial, initial_point, parameter_epsilon)
 
 
 # nolint end
