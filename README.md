@@ -33,8 +33,6 @@ calibration and remains widely used in hydrology and environmental modelling.
 
 This crate is a complete rewrite in Rust of the original SCE-UA implementation in [Matlab](https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method) and Fortran, as found in Qingyun Duan's thesis [Appendix I](https://repository.arizona.edu/handle/10150/185655).
 
-
-
 ## Rust
 
 The Rust crate provides a fast, dependency-light SCE-UA implementation.
