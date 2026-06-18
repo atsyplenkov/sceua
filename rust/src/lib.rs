@@ -4,9 +4,11 @@ mod error;
 mod population;
 mod rng;
 mod sce;
+#[doc(hidden)]
+pub mod duan_test_func;
 
 #[cfg(test)]
-mod benchmarks;
+mod duan_tests;
 
 pub use config::Config;
 pub use error::SceuaError;
