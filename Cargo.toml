@@ -1,8 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-  # PyO3 library
-  "py",
   # extendr crate
   "r/src/rust",
   "rust"
@@ -14,7 +12,8 @@ edition = "2021"
 rust-version = "1.90"
 
 [workspace.dependencies]
-anime = { path = "rust" }
+anime = { path = "rust", package = "sceua" }
+sceua = { path = "rust" }
 arrow = {version = "55", default-features = false }
 geo = "0.29.3"
 geo-traits = "0.3.0"
