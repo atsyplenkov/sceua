@@ -97,6 +97,23 @@ cargo test -p sceua --locked
 cargo test -p sceua --all-features --locked
 ```
 
+## Benchmarks
+
+Criterion benchmarks comparing serial and parallel execution on Duan's test
+problems live in `benches/benchmark.rs`:
+
+```sh
+# Serial only
+cargo bench -p sceua
+
+# Serial vs parallel
+cargo bench -p sceua --features parallel
+```
+
+The `parallel` feature only parallelises the initial population evaluation, so
+the largest speed-ups appear for expensive objective functions or higher-
+dimensional problems with larger initial populations.
+
 ## References
 
 Duan, Q., Sorooshian, S., and Gupta, V.K., 1992. Effective and efficient
