@@ -13,11 +13,11 @@ knitr::opts_chunk$set(
 library(sceua)
 ```
 
+The `sceua` package is not the first R package with the Shuffled Complex Evolution algorithm for global optimisation. To our knowledge, the [`rtop`](https://cran.r-project.org/package=rtop) and [`SoilHyP`](https://cran.r-project.org/web/packages/SoilHyP/index.html) packages have implemented this algorithm before. However, the `sceua` provides the fastest implementation available in R! See benchmarks below.
+
 ## A non-linear curve-fitting problem
 
-This problem is adapted from the `rtop::sceua()` documentation. We generate
-noisy observations from a sine function with three parameters and recover them
-by minimising the sum of squared errors.
+To test three packages between each other, we use the same non-linear curve-fitting problem as in the `rtop::sceua()` documentation. We generate noisy observations from a sine function with three parameters and recover them by minimising the sum of squared errors.
 
 ```{r sine-data}
 set.seed(1)
@@ -35,12 +35,9 @@ OFUN <- function(pars, x, yobs) {
 
 ## Timing comparison
 
-The `rtop` package contains a pure-R SCE-UA implementation. We can compare it
-with the Rust-backed `sceua` package on the same problem using the `bench`
-package.
+The `rtop` and `SoilHyP` packages contain a SCE-UA in pure R. Below is the comparison of these two packages with the Rust-backed `sceua` package on the same problem.
 
-`rtop::sceua()` prints convergence information to the console. The helper below
-captures that output and returns only the optimised value.
+> `rtop::sceua()` prints convergence information to the console. The helper below captures that output and returns only the optimised value.
 
 ```{r benchmark-setup, eval = requireNamespace("rtop", quietly = TRUE) && requireNamespace("bench", quietly = TRUE)}
 #| code-fold: true
@@ -90,3 +87,5 @@ bench::mark(
   check = function(x, y) isTRUE(all.equal(x, y, tolerance = 1e-3))
 )
 ```
+
+🚅🚅🚅
