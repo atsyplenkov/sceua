@@ -6,11 +6,13 @@ Authors@R:
            comment = c(ORCID = "0000-0003-4144-8402"))
 Description: R bindings to the SCE-UA algorithm for optimization as proposed by Duan et al. (1992) <doi:10.1029/91WR02985>.
 License: MIT + file LICENSE
+URL: https://github.com/atsyplenkov/sceua, https://atsyplenkov.github.io/sceua
 Encoding: UTF-8
 Language: en
 Roxygen: list(markdown = TRUE)
 Config/rextendr/version: 0.3.1.9001
 Config/build/bootstrap: TRUE
+Config/Needs/website: altdoc, quarto, bench, rtop, knitr, rmarkdown, rextendr, tomledit
 SystemRequirements: Cargo (Rust's package manager), rustc (>= 1.90)
 Imports:
     checkmate
