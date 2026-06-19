@@ -9,9 +9,9 @@
         <img src="https://img.shields.io/codecov/c/gh/atsyplenkov/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Codecov&logoColor=white"></a>
     <br>
     <a href="https://github.com/atsyplenkov/sceua/actions/workflows/ci.yaml">
-        <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/ci.yaml?style=flat&labelColor=1C2C2E&color=dea584&logo=GitHub%20Actions&logoColor=white"></a>
+        <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/ci.yaml?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>
     <a href="https://github.com/atsyplenkov/sceua/actions/workflows/R-CMD-check.yaml">
-        <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/R-CMD-check.yaml?style=flat&labelColor=1C2C2E&color=276DC3&logo=GitHub%20Actions&logoColor=white"></a>
+        <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/R-CMD-check.yaml?style=flat&labelColor=1C2C2E&color=276DC3&logo=R&logoColor=white"></a>
     <!--<a href="https://docs.rs/sceua/">
         <img src="https://img.shields.io/docsrs/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>-->
     <br>
