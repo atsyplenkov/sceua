@@ -1,0 +1,78 @@
+---
+title: "Benchmarks"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(sceua)
+```
+
+## A non-linear curve-fitting problem
+
+This problem is adapted from the `rtop::sceua()` documentation. We generate
+noisy observations from a sine function with three parameters and recover them
+by minimising the sum of squared errors.
+
+```{r sine-data}
+set.seed(1)
+
+fun <- function(x, pars) pars[2] * sin(x * pars[1]) + pars[3]
+
+x <- rnorm(50, sd = 3)
+y <- fun(x, pars = c(5, 2, 3)) + rnorm(length(x), sd = 0.3)
+
+OFUN <- function(pars, x, yobs) {
+  yvals <- fun(x, pars)
+  sum((yvals - yobs)^2)
+}
+```
+
+## Timing comparison
+
+The `rtop` package contains a pure-R SCE-UA implementation. We can compare it
+with the Rust-backed `sceua` package on the same problem using the `bench`
+package.
+
+`rtop::sceua()` prints convergence information to the console. The helper below
+captures that output and returns only the optimised value.
+
+```{r benchmark, eval = requireNamespace("rtop", quietly = TRUE) && requireNamespace("bench", quietly = TRUE)}
+# By default, rtop::sceua() prints convergence information to the console which clatters the output.
+silent_rtop <- function(...) {
+  utils::capture.output(
+    res <- rtop::sceua(...),
+    type = "output"
+  )
+  res$value
+}
+
+bench::mark(
+  sceua = sceua::sceua(
+    fn = OFUN,
+    lower = c(-10, 0, -10),
+    upper = c(10, 10, 10),
+    initial = c(0.1, 0.1, 0.1),
+    x = x,
+    yobs = y,
+    max_evaluations = 10000,
+    seed = 1
+  )$value,
+  rtop = silent_rtop(
+    OFUN,
+    pars = c(0.1, 0.1, 0.1),
+    lower = c(-10, 0, -10),
+    upper = c(10, 10, 10),
+    x = x,
+    yobs = y,
+    maxn = 10000
+  ),
+  iterations = 5,
+  check = TRUE
+)
+```
