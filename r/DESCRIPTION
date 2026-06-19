@@ -17,10 +17,6 @@ SystemRequirements: Cargo (Rust's package manager), rustc (>= 1.90)
 Imports:
     checkmate
 Suggests:
-    rtop,
-    knitr,
-    rmarkdown,
     testthat (>= 3.0.0)
-VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0
