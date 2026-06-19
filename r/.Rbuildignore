@@ -13,3 +13,8 @@
 ^vignettes/\*_files$
 ^bootstrap\.R$
 ^cran-comments\.md$
+^altdoc$
+^docs$
+^_quarto$
+^vignettes/benchmarks\.qmd$
+^vignettes/benchmarks_files$

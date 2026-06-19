@@ -1,0 +1,29 @@
+project:
+  type: website
+  output-dir: ../docs/
+
+website:
+  title: "$ALTDOC_PACKAGE_NAME"
+  site-url: https://atsyplenkov.github.io/sceua/
+  navbar:
+    search: true
+    left:
+      - text: Rust crate
+        file: rust_crate.md
+      - text: R package
+        file: index.md
+      - text: Articles
+        menu:
+          - text: Benchmarks
+            file: vignettes/benchmarks.qmd
+      - text: Reference
+        file: man/sceua.qmd
+    right:
+      - icon: github
+        href: $ALTDOC_PACKAGE_URL_GITHUB
+        aria-label: $ALTDOC_PACKAGE_NAME GitHub
+        target: _blank
+
+format:
+  html:
+    toc: true

@@ -8,25 +8,25 @@ format:
 
 # Run cargo clippy and cargo fmt
 lint-rs:
-  cargo clippy \
-    --all-targets \
-    --all-features \
-    --locked \
-    -- \
-    -D warnings \
-    -D clippy::dbg_macro
+    cargo clippy \
+      --all-targets \
+      --all-features \
+      --locked \
+      -- \
+      -D warnings \
+      -D clippy::dbg_macro
 
-  cargo fmt
+    cargo fmt
 
 # Apply fixes reported by `just lint`
 lint-rs-fix:
-  cargo clippy \
-    --all-targets \
-    --all-features \
-    --locked \
-    --fix --allow-dirty
+    cargo clippy \
+      --all-targets \
+      --all-features \
+      --locked \
+      --fix --allow-dirty
 
-  cargo fmt
+    cargo fmt
 
 # Run Rust tests for the core SCE-UA crate
 test-rs:
@@ -45,3 +45,13 @@ lint-r:
 test-r:
     R CMD build r
     R CMD check --no-manual sceua_*.tar.gz
+
+# Render the documentation website (syncs the Rust README first)
+render:
+    mkdir -p r/altdoc
+    cp rust/README.md r/altdoc/rust_crate.md
+    cd r && Rscript -e "altdoc::render_docs()"
+
+# Preview the documentation website locally
+preview:
+    cd r && Rscript -e "altdoc::preview_docs()"

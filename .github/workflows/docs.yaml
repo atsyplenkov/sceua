@@ -1,0 +1,59 @@
+name: docs
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: r
+          needs: website
+
+      - name: Bootstrap and vendor Rust dependencies
+        working-directory: r
+        run: |
+          Rscript bootstrap.R
+          Rscript -e 'rextendr::vendor_crates()'
+
+      - name: Build and install package
+        run: |
+          R CMD build r
+          R CMD INSTALL sceua_*.tar.gz
+
+      - name: Copy Rust README
+        run: cp rust/README.md r/altdoc/rust_crate.md
+
+      - name: Render documentation
+        working-directory: r
+        run: Rscript -e "altdoc::render_docs()"
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./r/docs
+          force_orphan: true

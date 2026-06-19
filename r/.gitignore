@@ -9,3 +9,7 @@ src/Makevars.win
 
 *.Rcheck
 *.tar.gz
+docs/
+_quarto/
+altdoc/pkgdown.yml
+altdoc/freeze.rds
