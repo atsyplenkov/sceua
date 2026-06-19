@@ -13,11 +13,19 @@ knitr::opts_chunk$set(
 library(sceua)
 ```
 
-The `sceua` package is not the first R package with the Shuffled Complex Evolution algorithm for global optimisation. To our knowledge, the [`rtop`](https://cran.r-project.org/package=rtop) and [`SoilHyP`](https://cran.r-project.org/web/packages/SoilHyP/index.html) packages have implemented this algorithm before. However, the `sceua` provides the fastest implementation available in R! See benchmarks below.
+The `sceua` package is not the first R package with the Shuffled Complex
+Evolution algorithm for global optimisation. To our knowledge, the
+[`rtop`](https://cran.r-project.org/package=rtop) and
+[`SoilHyP`](https://cran.r-project.org/web/packages/SoilHyP/index.html)
+packages have implemented this algorithm before. However, `sceua` provides the
+fastest implementation available in R! See benchmarks below.
 
 ## A non-linear curve-fitting problem
 
-To test three packages between each other, we use the same non-linear curve-fitting problem as in the `rtop::sceua()` documentation. We generate noisy observations from a sine function with three parameters and recover them by minimising the sum of squared errors.
+To test the three packages against each other, we use the same non-linear
+curve-fitting problem as in the `rtop::sceua()` documentation. We generate
+noisy observations from a sine function with three parameters and recover them
+by minimising the sum of squared errors.
 
 ```{r sine-data}
 set.seed(1)
@@ -35,15 +43,26 @@ OFUN <- function(pars, x, yobs) {
 
 ## Timing comparison
 
-The `rtop` and `SoilHyP` packages contain a SCE-UA in pure R. Below is the comparison of these two packages with the Rust-backed `sceua` package on the same problem.
+The `rtop` and `SoilHyP` packages contain SCE-UA implementations in pure R.
+Below is a comparison of these two packages with the Rust-backed `sceua`
+package on the same problem.
 
-> `rtop::sceua()` prints convergence information to the console. The helper below captures that output and returns only the optimised value.
+> `rtop::sceua()` and `SoilHyP::SCEoptim()` print convergence information to the console. The helper
+> below captures that output and returns only the optimised value.
 
-```{r benchmark-setup, eval = requireNamespace("rtop", quietly = TRUE) && requireNamespace("bench", quietly = TRUE)}
+```{r benchmark-setup, eval = requireNamespace("rtop", quietly = TRUE) && requireNamespace("SoilHyP", quietly = TRUE) && requireNamespace("bench", quietly = TRUE)}
 #| code-fold: true
 silent_rtop <- function(...) {
   utils::capture.output(
     res <- rtop::sceua(...),
+    type = "output"
+  )
+  res$value
+}
+
+silent_soilhyp <- function(...) {
+  utils::capture.output(
+    res <- SoilHyP::SCEoptim(...),
     type = "output"
   )
   res$value
@@ -60,9 +79,19 @@ invisible(silent_rtop(
   yobs = y,
   maxn = 10000
 ))
+
+invisible(silent_soilhyp(
+  FUN = OFUN,
+  par = c(0.1, 0.1, 0.1),
+  lower = c(-10, 0, -10),
+  upper = c(10, 10, 10),
+  x = x,
+  yobs = y,
+  control = list(maxeval = 10000)
+))
 ```
 
-```{r benchmark, eval = requireNamespace("rtop", quietly = TRUE) && requireNamespace("bench", quietly = TRUE)}
+```{r benchmark, eval = requireNamespace("rtop", quietly = TRUE) && requireNamespace("SoilHyP", quietly = TRUE) && requireNamespace("bench", quietly = TRUE)}
 bench::mark(
   sceua = sceua::sceua(
     fn = OFUN,
@@ -83,9 +112,19 @@ bench::mark(
     yobs = y,
     maxn = 10000
   ),
-  iterations = 5,
+  soilhyp = silent_soilhyp(
+    FUN = OFUN,
+    par = c(0.1, 0.1, 0.1),
+    lower = c(-10, 0, -10),
+    upper = c(10, 10, 10),
+    x = x,
+    yobs = y,
+    control = list(maxeval = 10000)
+  ),
+  iterations = 15,
+  relative = FALSE,
   check = function(x, y) isTRUE(all.equal(x, y, tolerance = 1e-3))
 )
 ```
 
-🚅🚅🚅
+Yay! 60-80 times faster than predecessors 🚂→🚅
