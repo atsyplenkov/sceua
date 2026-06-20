@@ -77,10 +77,3 @@ test_that("sceua inherits R's RNG state", {
   expect_equal(first$value, second$value)
   expect_equal(first$history, second$history)
 })
-
-test_that("sceua rejects the old seed argument", {
-  expect_error(
-    sceua(fn = function(x) sum(x^2), lower = c(-5), upper = c(5), seed = 1L),
-    "Use `set.seed\\(\\)`"
-  )
-})

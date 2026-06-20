@@ -111,7 +111,8 @@ sceua <- function(
     min_complexes <- complexes
   }
 
-  if (length(args) > 0L) {
+  if (length(list(...)) > 0L) {
+    args <- list(...)
     original_fn <- fn
     fn <- function(x) do.call(original_fn, c(list(x), args))
   }
