@@ -3,7 +3,9 @@ LIBDIR = $(TARGET_DIR)/release
 STATLIB = $(LIBDIR)/libsceua.a
 PKG_LIBS = -L$(LIBDIR) -lsceua
 
-all: C_clean
+all: $(SHLIB) rust_clean
+
+.PHONY: $(STATLIB)
 
 $(SHLIB): $(STATLIB)
 
@@ -11,34 +13,30 @@ CARGOTMP = $(CURDIR)/.cargo
 VENDOR_DIR = $(CURDIR)/vendor
 
 
-# RUSTFLAGS appends --print=native-static-libs to ensure that 
-# the correct linkers are used. Use this for debugging if need. 
+# RUSTFLAGS appends --print=native-static-libs to ensure that
+# the correct linkers are used. Use this for debugging if need.
 #
 # CRAN note: Cargo and Rustc versions are reported during
-# configure via tools/msrv.R.
+# configure via tools/config.R.
 #
-# When the NOT_CRAN flag is *not* set, the vendor.tar.xz, if present,
-# is unzipped and used for offline compilation.
+# vendor.tar.xz, if present, is unzipped and used for offline compilation.
 $(STATLIB):
 
-	# Check if NOT_CRAN is false and unzip vendor.tar.xz if so
-	if [ "$(NOT_CRAN)" != "true" ]; then \
-		if [ -f ./rust/vendor.tar.xz ]; then \
-			tar xf rust/vendor.tar.xz && \
-			mkdir -p $(CARGOTMP) && \
-			cp rust/vendor-config.toml $(CARGOTMP)/config.toml; \
-		fi; \
+	if [ -f ./rust/vendor.tar.xz ]; then \
+		tar xf rust/vendor.tar.xz && \
+		mkdir -p $(CARGOTMP) && \
+		cp rust/vendor-config.toml $(CARGOTMP)/config.toml; \
 	fi
 
 	export CARGO_HOME=$(CARGOTMP) && \
 	export PATH="$(PATH):$(HOME)/.cargo/bin" && \
-	RUSTFLAGS="$(RUSTFLAGS) --print=native-static-libs" cargo build  --lib --release --manifest-path=./rust/Cargo.toml --target-dir $(TARGET_DIR)
+	RUSTFLAGS="$(RUSTFLAGS) --print=native-static-libs" cargo build -j 2 --offline --lib --release --manifest-path=./rust/Cargo.toml --target-dir $(TARGET_DIR) 
 
 	# Always clean up CARGOTMP
 	rm -Rf $(CARGOTMP);
 
-C_clean:
-	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)
+rust_clean: $(SHLIB)
+	rm -Rf $(CARGOTMP) $(VENDOR_DIR) $(TARGET_DIR)
 
 clean:
 	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS) $(TARGET_DIR) $(VENDOR_DIR)

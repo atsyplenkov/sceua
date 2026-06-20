@@ -131,8 +131,23 @@ for (idx in workspace_dep_idx) {
 # insert the new deps
 new_cargo_toml <- insert_items(new_cargo_toml, dependencies = pkg_deps)
 
+# Preserve the release profile when this crate becomes the CRAN build root.
+release_profile <- list(lto = TRUE, `codegen-units` = 1L)
+new_cargo_toml <- insert_items(
+  new_cargo_toml,
+  profile = list(release = release_profile)
+)
+
 info("Updated Cargo.toml:")
 cat(as.character(new_cargo_toml), sep = "\n")
 
 # write the toml back
 write_toml(new_cargo_toml, cargo_path)
+
+info("Vendoring Rust dependencies")
+unlink("src/.cargo", recursive = TRUE)
+unlink(file.path("src/rust", "Cargo.lock"))
+unlink(file.path("src/rust", "vendor"), recursive = TRUE)
+unlink(file.path("src/rust", "vendor.tar.xz"))
+unlink(file.path("src/rust", "vendor-config.toml"))
+rextendr::vendor_crates(clean = TRUE)

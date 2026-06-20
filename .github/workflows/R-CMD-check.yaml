@@ -55,9 +55,7 @@ jobs:
           working-directory: r
 
       - name: Bootstrap and vendor Rust dependencies
-        run: |
-          Rscript bootstrap.R
-          Rscript -e 'rextendr::vendor_crates()'
+        run: Rscript bootstrap.R
         working-directory: r
 
       - uses: r-lib/actions/check-r-package@v2

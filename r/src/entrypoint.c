@@ -2,9 +2,7 @@
 // to avoid the linker removing the static library.
 
 void R_init_sceua_extendr(void *dll);
-void register_extendr_panic_hook(void);
 
 void R_init_sceua(void *dll) {
-    register_extendr_panic_hook();
     R_init_sceua_extendr(dll);
 }
