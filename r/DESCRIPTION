@@ -13,7 +13,7 @@ Roxygen: list(markdown = TRUE)
 Config/rextendr/version: 0.3.1.9001
 Config/build/bootstrap: TRUE
 Config/Needs/website: altdoc, quarto, bench, rtop, SoilHyP, knitr, rmarkdown, rextendr, tomledit
-SystemRequirements: Cargo (Rust's package manager), rustc (>= 1.90)
+SystemRequirements: Cargo (Rust's package manager), rustc (>= 1.91.1)
 Imports:
     checkmate
 Suggests:

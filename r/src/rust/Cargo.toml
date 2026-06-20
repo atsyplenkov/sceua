@@ -2,7 +2,7 @@
 name = "sceua_r"
 version = "0.0.1"
 edition = "2021"
-rust-version = "1.90"
+rust-version = "1.91.1"
 publish = false
 
 [lib]

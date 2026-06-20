@@ -48,5 +48,5 @@ downloaded during installation.
 
 ## MSRV
 
-Minimum supported Rust version is 1.90, declared in `DESCRIPTION`
+Minimum supported Rust version is 1.91.1, declared in `DESCRIPTION`
 (`SystemRequirements`) and enforced by `configure` via `tools/msrv.R`.
