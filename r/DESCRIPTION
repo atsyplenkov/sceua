@@ -4,9 +4,16 @@ Version: 0.0.1
 Authors@R:
     person("Anatoly", "Tsyplenkov", , "atsyplenkov@fastmail.com", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0003-4144-8402"))
-Description: R bindings to the SCE-UA algorithm for optimization as proposed by Duan et al. (1992) <doi:10.1029/91WR02985>.
+Description: Provides an R interface to a Rust implementation of the
+    Shuffled Complex Evolution - University of Arizona (SCE-UA) global
+    optimization algorithm. SCE-UA combines simplex search, competitive
+    evolution, and complex shuffling to solve nonlinear, non-convex,
+    continuous parameter estimation problems. The method is commonly used
+    for calibrating hydrological and environmental models and follows the
+    algorithm proposed by Duan et al. (1992) <doi:10.1029/91WR02985>.
 License: MIT + file LICENSE
-URL: https://github.com/atsyplenkov/sceua, https://atsyplenkov.github.io/sceua
+URL: https://github.com/atsyplenkov/sceua/, https://atsyplenkov.github.io/sceua/
+BugReports: https://github.com/atsyplenkov/sceua/issues/
 Encoding: UTF-8
 Language: en
 Roxygen: list(markdown = TRUE)
