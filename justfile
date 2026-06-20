@@ -42,7 +42,7 @@ lint-r:
     cd r && jarl check .
 
 # Build and test the R package.
-# Bootstraps the Rust workspace into the R package source before building,
+# Bootstraps and vendors the Rust workspace into the R package source,
 # then restores the original development Cargo.toml on exit.
 test-r:
     #!/usr/bin/env bash
@@ -50,7 +50,7 @@ test-r:
     cp r/src/rust/Cargo.toml r/src/rust/Cargo.toml.bak
     cleanup() {
         mv r/src/rust/Cargo.toml.bak r/src/rust/Cargo.toml
-        rm -rf r/src/rust/rust
+        rm -rf r/src/rust/rust r/src/rust/vendor r/src/.cargo
     }
     trap cleanup EXIT
     cd r && Rscript bootstrap.R
@@ -58,6 +58,22 @@ test-r:
     R CMD build r
     R CMD check --no-manual sceua_*.tar.gz
     rm -rf sceua_*.tar.gz sceua.Rcheck
+
+# Build and install the R package locally.
+install-r:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    cp r/src/rust/Cargo.toml r/src/rust/Cargo.toml.bak
+    cleanup() {
+        mv r/src/rust/Cargo.toml.bak r/src/rust/Cargo.toml
+        rm -rf r/src/rust/rust r/src/rust/vendor r/src/.cargo
+        rm -f sceua_*.tar.gz
+    }
+    trap cleanup EXIT
+    cd r && Rscript bootstrap.R
+    cd ..
+    R CMD build r
+    R CMD INSTALL sceua_*.tar.gz
 
 # Render the documentation website (syncs the Rust README first)
 render:
