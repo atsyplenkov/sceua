@@ -5,3 +5,5 @@ paper/**
 !paper/**/*.qmd
 r/src/rust/rust
 docs/**
+.pi/
+AGENTS.md
