@@ -27,7 +27,7 @@ fastest implementation available in R. See benchmarks below.
 
 ## A non-linear curve-fitting problem
 
-To test the three packages against each other, we use the same non-linear
+To test the three packages against each other, we first use the same non-linear
 curve-fitting problem as in the `rtop::sceua()` documentation. We generate
 noisy observations from a sine function with three parameters and recover them
 by minimising the sum of squared errors.
@@ -128,19 +128,18 @@ bench::mark(
     yobs = y,
     control = list(maxeval = 10000)
   ),
-  iterations = 15,
+  iterations = 25,
   relative = FALSE,
   check = function(x, y) isTRUE(all.equal(x, y, tolerance = 1e-3))
 )
 ```
 
-## Duan test-function benchmarks
+## Q. Duan's test-function benchmarks
 
-The following benchmarks use R translations of the Duan test functions mirrored
-in `rust/src/duan_test_func.rs`. These are run with stricter controls than the
-default timing example above: objective convergence is disabled, parameter
-convergence is tightened, and each problem pins a seed and population
-size that reaches the documented optimum across all three packages.
+The following benchmarks use R translations of the Q. Duan test functions published alongside the [Matlab code](https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method). We use one aligned strict configuration for
+all problems: objective convergence is disabled and parameter convergence is
+tightened to `1e-6`. Timing benchmarks are only run for packages that return
+finite values and agree with at least one other package within `1e-3`. Spoiler, not all packages return finite values...
 
 ```{r duan-test-functions, eval = benchmark_packages_available}
 #| code-fold: true
@@ -208,32 +207,20 @@ hartman <- function(x) {
     c(0.5886, 0.9991, 0.6650, 0.0381)
   )
 
-  a3 <- rbind(
-    c(3, 0.1, 3, 0.1),
-    c(10, 10, 10, 10),
-    c(30, 35, 30, 35)
-  )
-  c3 <- c(1, 1.2, 3, 3.2)
-  p3 <- rbind(
-    c(0.3689, 0.4699, 0.1091, 0.03815),
-    c(0.1170, 0.4387, 0.8732, 0.5743),
-    c(0.2673, 0.7470, 0.5547, 0.8828)
-  )
-
-  if (length(x) == 3L) {
-    a <- a3
-    c_values <- c3
-    p <- p3
-  } else {
-    a <- a6
-    c_values <- c6
-    p <- p6
-  }
-
-  -sum(vapply(seq_along(c_values), function(i) {
-    c_values[i] * exp(-sum(a[, i] * (x - p[, i])^2))
+  -sum(vapply(seq_along(c6), function(i) {
+    c6[i] * exp(-sum(a6[, i] * (x - p6[, i])^2))
   }, numeric(1)))
 }
+
+duan_control <- list(
+  seed = 1L,
+  complexes = 5L,
+  max_evaluations = 10000L,
+  kstop = 5L,
+  pcento = 0,
+  parameter_epsilon = 1e-6,
+  tolerance = 1e-3
+)
 
 duan_problems <- list(
   goldstein_price = list(
@@ -241,68 +228,54 @@ duan_problems <- list(
     lower = c(-2, -2),
     upper = c(2, 2),
     initial = c(1, 1),
-    seed = 1L,
-    complexes = 5L,
-    max_evaluations = 10000L
+    optimum = 3
   ),
   rosenbrock = list(
     fn = rosenbrock,
     lower = c(-5, -5),
     upper = c(5, 5),
     initial = c(-3, 4),
-    seed = 100L,
-    complexes = 20L,
-    max_evaluations = 50000L
+    optimum = 0
   ),
   six_hump_camelback = list(
     fn = six_hump_camelback,
     lower = c(-5, -2),
     upper = c(5, 8),
     initial = c(0, 0),
-    seed = 1L,
-    complexes = 5L,
-    max_evaluations = 10000L
+    optimum = -1.031628453489877
   ),
   rastrigin_duan = list(
     fn = rastrigin_duan,
     lower = c(-1, -1),
     upper = c(1, 1),
     initial = c(0.5, 0.5),
-    seed = 2L,
-    complexes = 5L,
-    max_evaluations = 10000L
+    optimum = -2
   ),
   griewank_duan = list(
     fn = griewank_duan,
     lower = rep(-600, 10),
     upper = rep(600, 10),
     initial = rep(100, 10),
-    seed = 3L,
-    complexes = 5L,
-    max_evaluations = 10000L
+    optimum = 0
   ),
   shekel = list(
     fn = shekel,
     lower = rep(0, 4),
     upper = rep(10, 4),
     initial = rep(1, 4),
-    seed = 1L,
-    complexes = 5L,
-    max_evaluations = 10000L
+    optimum = -10.5364098252
   ),
   hartman = list(
     fn = hartman,
     lower = rep(0, 6),
     upper = rep(1, 6),
     initial = rep(0.5, 6),
-    seed = 2L,
-    complexes = 5L,
-    max_evaluations = 10000L
+    optimum = -3.322368011415515
   )
 )
 
 sceua_duan_value <- function(problem) {
-  set.seed(problem$seed)
+  set.seed(duan_control$seed)
   n <- length(problem$lower)
 
   sceua::sceua(
@@ -310,20 +283,20 @@ sceua_duan_value <- function(problem) {
     lower = problem$lower,
     upper = problem$upper,
     initial = problem$initial,
-    max_evaluations = problem$max_evaluations,
-    kstop = 5,
-    pcento = 0,
-    complexes = problem$complexes,
+    max_evaluations = duan_control$max_evaluations,
+    kstop = duan_control$kstop,
+    pcento = duan_control$pcento,
+    complexes = duan_control$complexes,
     points_per_complex = 2L * n + 1L,
     simplex_size = n + 1L,
     evolution_steps = 2L * n + 1L,
-    min_complexes = problem$complexes,
-    parameter_epsilon = 1e-6
+    min_complexes = duan_control$complexes,
+    parameter_epsilon = duan_control$parameter_epsilon
   )$value
 }
 
 rtop_duan_value <- function(problem) {
-  set.seed(problem$seed)
+  set.seed(duan_control$seed)
   n <- length(problem$lower)
 
   silent_rtop(
@@ -331,21 +304,21 @@ rtop_duan_value <- function(problem) {
     pars = problem$initial,
     lower = problem$lower,
     upper = problem$upper,
-    maxn = problem$max_evaluations,
-    kstop = 5,
-    pcento = 0,
-    ngs = problem$complexes,
+    maxn = duan_control$max_evaluations,
+    kstop = duan_control$kstop,
+    pcento = duan_control$pcento,
+    ngs = duan_control$complexes,
     npg = 2L * n + 1L,
     nps = n + 1L,
     nspl = 2L * n + 1L,
-    mings = problem$complexes,
-    peps = 1e-6,
+    mings = duan_control$complexes,
+    peps = duan_control$parameter_epsilon,
     iniflg = 1
   )
 }
 
 soilhyp_duan_value <- function(problem) {
-  set.seed(problem$seed)
+  set.seed(duan_control$seed)
   n <- length(problem$lower)
 
   silent_soilhyp(
@@ -354,26 +327,91 @@ soilhyp_duan_value <- function(problem) {
     lower = problem$lower,
     upper = problem$upper,
     control = list(
-      maxeval = problem$max_evaluations,
-      ncomplex = problem$complexes,
+      maxeval = duan_control$max_evaluations,
+      ncomplex = duan_control$complexes,
       cce.iter = 2L * n + 1L,
-      reltol = 0,
-      tolsteps = 5,
+      reltol = duan_control$pcento,
+      tolsteps = duan_control$kstop,
       initsample = "latin"
     )
   )
 }
 
-benchmark_duan_problem <- function(problem, iterations = 3) {
-  bench::mark(
-    sceua = sceua_duan_value(problem),
-    rtop = rtop_duan_value(problem),
-    soilhyp = soilhyp_duan_value(problem),
-    iterations = iterations,
-    relative = FALSE,
-    check = function(x, y) isTRUE(all.equal(x, y, tolerance = 1e-3))
+safe_duan_value <- function(package, problem) {
+  value <- tryCatch(
+    switch(
+      package,
+      sceua = sceua_duan_value(problem),
+      rtop = rtop_duan_value(problem),
+      soilhyp = soilhyp_duan_value(problem)
+    ),
+    error = function(e) NA_real_
+  )
+
+  as.numeric(value)
+}
+
+validate_duan_problem <- function(name, problem) {
+  packages <- c("sceua", "rtop", "soilhyp")
+  values <- vapply(packages, safe_duan_value, numeric(1), problem = problem)
+  finite_values <- values[is.finite(values)]
+  agrees <- length(finite_values) >= 2L &&
+    isTRUE(all.equal(
+      unname(finite_values),
+      rep(unname(finite_values[1]), length(finite_values)),
+      tolerance = duan_control$tolerance
+    ))
+
+  data.frame(
+    #problem = name,
+    #package = packages,
+    value = values,
+    error = values - problem$optimum,
+    timed = is.finite(values) & agrees,
+    stringsAsFactors = FALSE
   )
 }
+
+duan_validation <- do.call(
+  rbind,
+  Map(validate_duan_problem, names(duan_problems), duan_problems)
+)
+
+duan_timing_problems <- unique(duan_validation$problem[duan_validation$timed])
+
+benchmark_duan_problem <- function(name, iterations = 3) {
+  timed_packages <- duan_validation$package[
+    duan_validation$problem == name & duan_validation$timed
+  ]
+  if (length(timed_packages) < 2L) {
+    message("Skipping timing benchmark: fewer than two packages agree.")
+    return(invisible(NULL))
+  }
+
+  problem <- duan_problems[[name]]
+  expressions <- list(
+    sceua = quote(sceua_duan_value(problem)),
+    rtop = quote(rtop_duan_value(problem)),
+    soilhyp = quote(soilhyp_duan_value(problem))
+  )
+  do.call(
+    bench::mark,
+    c(
+      expressions[timed_packages],
+      list(
+        iterations = iterations,
+        relative = FALSE,
+        check = function(x, y) {
+          isTRUE(all.equal(x, y, tolerance = duan_control$tolerance))
+        }
+      )
+    )
+  )
+}
+```
+
+```{r duan-validation, eval = benchmark_packages_available}
+duan_validation
 ```
 
 ### Goldstein-Price function
@@ -381,7 +419,7 @@ benchmark_duan_problem <- function(problem, iterations = 3) {
 Bounds: `[-2, 2]` for both parameters. Global minimum: `f(0, -1) = 3`.
 
 ```{r benchmark-goldstein-price, eval = benchmark_packages_available}
-benchmark_duan_problem(duan_problems$goldstein_price)
+benchmark_duan_problem("goldstein_price")
 ```
 
 ### Rosenbrock function
@@ -389,7 +427,7 @@ benchmark_duan_problem(duan_problems$goldstein_price)
 Bounds: `[-5, 5]` for both parameters. Global minimum: `f(1, 1) = 0`.
 
 ```{r benchmark-rosenbrock, eval = benchmark_packages_available}
-benchmark_duan_problem(duan_problems$rosenbrock)
+benchmark_duan_problem("rosenbrock")
 ```
 
 ### Six-hump camelback function
@@ -398,7 +436,7 @@ Bounds: `[-5, 5]` for the first parameter and `[-2, 8]` for the second.
 Global minimum: approximately `f(0.08983, -0.7126) = -1.031628`.
 
 ```{r benchmark-six-hump-camelback, eval = benchmark_packages_available}
-benchmark_duan_problem(duan_problems$six_hump_camelback)
+benchmark_duan_problem("six_hump_camelback")
 ```
 
 ### Rastrigin-like function
@@ -406,7 +444,7 @@ benchmark_duan_problem(duan_problems$six_hump_camelback)
 Bounds: `[-1, 1]` for both parameters. Global minimum: `f(0, 0) = -2`.
 
 ```{r benchmark-rastrigin-duan, eval = benchmark_packages_available}
-benchmark_duan_problem(duan_problems$rastrigin_duan)
+benchmark_duan_problem("rastrigin_duan")
 ```
 
 ### Griewank function
@@ -415,7 +453,7 @@ Bounds: `[-600, 600]` for all ten parameters. Global minimum:
 `f(0, ..., 0) = 0`.
 
 ```{r benchmark-griewank-duan, eval = benchmark_packages_available}
-benchmark_duan_problem(duan_problems$griewank_duan)
+benchmark_duan_problem("griewank_duan")
 ```
 
 ### Shekel function
@@ -424,7 +462,7 @@ Bounds: `[0, 10]` for all four parameters. Global minimum: approximately
 `f(4, 4, 4, 4) = -10.5363`.
 
 ```{r benchmark-shekel, eval = benchmark_packages_available}
-benchmark_duan_problem(duan_problems$shekel)
+benchmark_duan_problem("shekel")
 ```
 
 ### Hartman function
@@ -433,5 +471,5 @@ Bounds: `[0, 1]` for all six parameters. Global minimum: approximately
 `f(0.201, 0.150, 0.477, 0.275, 0.311, 0.657) = -3.3223`.
 
 ```{r benchmark-hartman, eval = benchmark_packages_available}
-benchmark_duan_problem(duan_problems$hartman)
+benchmark_duan_problem("hartman")
 ```
