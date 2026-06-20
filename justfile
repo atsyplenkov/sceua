@@ -57,6 +57,7 @@ test-r:
     cd ..
     R CMD build r
     R CMD check --no-manual sceua_*.tar.gz
+    rm -rf sceua_*.tar.gz sceua.Rcheck
 
 # Render the documentation website (syncs the Rust README first)
 render:
