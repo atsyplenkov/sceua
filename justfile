@@ -41,8 +41,20 @@ rust-bench:
 lint-r:
     cd r && jarl check .
 
-# Build and test the R package
+# Build and test the R package.
+# Bootstraps the Rust workspace into the R package source before building,
+# then restores the original development Cargo.toml on exit.
 test-r:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    cp r/src/rust/Cargo.toml r/src/rust/Cargo.toml.bak
+    cleanup() {
+        mv r/src/rust/Cargo.toml.bak r/src/rust/Cargo.toml
+        rm -rf r/src/rust/rust
+    }
+    trap cleanup EXIT
+    cd r && Rscript bootstrap.R
+    cd ..
     R CMD build r
     R CMD check --no-manual sceua_*.tar.gz
 
