@@ -14,10 +14,11 @@ This is the first submission of `sceua`.
 
 ### NOTE: installed package size / tarball size
 
-The source tarball is approximately 6.1 MB. Rust dependencies are
+The source tarball is approximately 0.8 MB. Rust dependencies are
 vendored into `src/rust/vendor.tar.xz` so that the package builds
-offline, as required by CRAN. The vendored archive accounts for the
-bulk of the tarball size.
+offline, as required by CRAN. Development-only Rust dependencies and
+benchmarks are stripped from the bootstrapped CRAN source before
+vendoring; they remain available in the repository's Rust crate.
 
 ## Dependencies
 

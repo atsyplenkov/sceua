@@ -98,11 +98,36 @@ for (i in seq_along(workspace_fields$dependencies)) {
   }
 }
 
+strip_cran_dev_sections <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  keep <- rep(TRUE, length(lines))
+  in_removed_section <- FALSE
+
+  for (i in seq_along(lines)) {
+    line <- trimws(lines[[i]])
+    is_section <- grepl("^\\[", line)
+
+    if (is_section) {
+      in_removed_section <- line %in% c("[dev-dependencies]", "[[bench]]")
+    }
+
+    if (in_removed_section) {
+      keep[[i]] <- FALSE
+    }
+  }
+
+  writeLines(lines[keep], path)
+}
+
 # iterate through deps and copy them to the workspace
 for (.dep in non_reg_deps$path) {
   dest <- file.path("src/rust", basename(.dep))
   info("Copying dep", .dep, " into ", dest)
   fs::dir_copy(.dep, dest, overwrite = TRUE)
+  strip_cran_dev_sections(file.path(dest, "Cargo.toml"))
+  if (dir.exists(file.path(dest, "benches"))) {
+    fs::dir_delete(file.path(dest, "benches"))
+  }
 }
 
 
