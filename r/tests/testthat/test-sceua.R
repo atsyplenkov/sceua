@@ -1,4 +1,5 @@
 test_that("sceua converges on a two-dimensional sphere", {
+  set.seed(1969)
   result <- sceua(
     fn = function(x) sum(x^2),
     lower = c(-5, -5),
@@ -6,7 +7,6 @@ test_that("sceua converges on a two-dimensional sphere", {
     max_evaluations = 5000L,
     kstop = 5L,
     pcento = 1e-8,
-    seed = 1969L,
     complexes = 5L
   )
 
@@ -23,6 +23,7 @@ test_that("sceua converges on a two-dimensional sphere", {
 })
 
 test_that("sceua passes extra arguments to the objective", {
+  set.seed(1969)
   fn <- function(x, target) sum((x - target)^2)
 
   result <- sceua(
@@ -30,8 +31,7 @@ test_that("sceua passes extra arguments to the objective", {
     lower = c(-5, -5),
     upper = c(5, 5),
     target = c(1, 2),
-    max_evaluations = 5000L,
-    seed = 1969L
+    max_evaluations = 5000L
   )
 
   expect_lt(sum((result$par - c(1, 2))^2), 1e-2)
@@ -45,15 +45,42 @@ test_that("sceua validates bound lengths", {
 })
 
 test_that("sceua respects initial point", {
+  set.seed(1969)
   result <- sceua(
     fn = function(x) sum(x^2),
     lower = c(-5, -5),
     upper = c(5, 5),
     initial = c(1, 1),
-    max_evaluations = 100L,
-    seed = 1969L
+    max_evaluations = 100L
   )
 
   expect_length(result$par, 2)
   expect_true(result$value < Inf)
+})
+
+test_that("sceua inherits R's RNG state", {
+  run_sceua <- function() {
+    sceua(
+      fn = function(x) sum(x^2),
+      lower = c(-5, -5),
+      upper = c(5, 5),
+      max_evaluations = 500L
+    )
+  }
+
+  set.seed(42)
+  first <- run_sceua()
+  set.seed(42)
+  second <- run_sceua()
+
+  expect_equal(first$par, second$par)
+  expect_equal(first$value, second$value)
+  expect_equal(first$history, second$history)
+})
+
+test_that("sceua rejects the old seed argument", {
+  expect_error(
+    sceua(fn = function(x) sum(x^2), lower = c(-5), upper = c(5), seed = 1L),
+    "Use `set.seed\\(\\)`"
+  )
 })

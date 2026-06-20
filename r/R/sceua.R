@@ -17,7 +17,6 @@
 #' @param kstop Number of shuffling loops over which the objective value must
 #'   change by `pcento` before convergence.
 #' @param pcento Objective convergence threshold.
-#' @param seed Random seed passed to the Fortran-compatible RAN1 generator.
 #' @param complexes Number of complexes in the initial population.
 #' @param points_per_complex Number of points in each complex. Defaults to
 #'   `2 * n + 1` where `n` is the number of parameters.
@@ -29,6 +28,10 @@
 #'   `complexes`.
 #' @param parameter_epsilon Parameter convergence threshold.
 #' @param ... Additional arguments passed to `fn`.
+#'
+#' @details
+#' The R wrapper draws the internal SCE-UA seed from R's global random number
+#' generator. Call `set.seed()` before `sceua()` for reproducible results.
 #'
 #' @returns
 #' An object of class `sceua`: a list with components:
@@ -47,6 +50,7 @@
 #' @export
 #'
 #' @examples
+#' set.seed(1969)
 #' # Two-dimensional sphere
 #' result <- sceua(
 #'   fn = function(x) sum(x^2),
@@ -55,7 +59,6 @@
 #'   max_evaluations = 5000,
 #'   kstop = 5,
 #'   pcento = 1e-8,
-#'   seed = 1969,
 #'   complexes = 5
 #' )
 #' result
@@ -67,7 +70,6 @@ sceua <- function(
   max_evaluations = 10000L,
   kstop = 5L,
   pcento = 0.01,
-  seed = 1969L,
   complexes = 2L,
   points_per_complex = NULL,
   simplex_size = NULL,
@@ -109,8 +111,7 @@ sceua <- function(
     min_complexes <- complexes
   }
 
-  if (length(list(...)) > 0L) {
-    args <- list(...)
+  if (length(args) > 0L) {
     original_fn <- fn
     fn <- function(x) do.call(original_fn, c(list(x), args))
   }
@@ -122,7 +123,7 @@ sceua <- function(
     max_evaluations = as.integer(max_evaluations),
     kstop = as.integer(kstop),
     pcento = as.double(pcento),
-    seed = as.integer(seed),
+    seed = draw_sceua_seed(),
     complexes = as.integer(complexes),
     points_per_complex = as.integer(points_per_complex),
     simplex_size = as.integer(simplex_size),
@@ -148,6 +149,10 @@ sceua <- function(
   result$history <- history
 
   structure(result, class = "sceua")
+}
+
+draw_sceua_seed <- function() {
+  as.integer(stats::runif(1L, min = 1, max = .Machine$integer.max))
 }
 
 #' @export

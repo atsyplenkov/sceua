@@ -37,7 +37,7 @@ Minimise a simple sphere function:
 
 ``` r
 library(sceua)
-
+set.seed(1969)
 result <- sceua(
   fn = function(x) sum(x^2),
   lower = c(-5, -5),
@@ -45,40 +45,37 @@ result <- sceua(
   max_evaluations = 5000,
   kstop = 5,
   pcento = 1e-8,
-  seed = 1969,
   complexes = 5
 )
 
 result
 #> <sceua>
-#> best value:    3.92086e-13
-#> evaluations:   2385
-#> iterations:    16
-#> termination:   objective_convergence
+#> best value:    4.13437e-11
+#> evaluations:   625
+#> iterations:    15
+#> termination:   parameter_convergence
 #> best parameters:
-#> [1] -4.450068e-07 -2.120689e-07
+#> [1] -5.857289e-06 -2.652528e-06
 ```
 
 Pass extra arguments to the objective:
 
 ``` r
 fn <- function(x, target) sum((x - target)^2)
-
+set.seed(1969)
 result <- sceua(
   fn = fn,
   lower = c(-5, -5),
   upper = c(5, 5),
   target = c(1, 2),
-  max_evaluations = 5000,
-  seed = 1969
+  max_evaluations = 5000
 )
 
 result$par
-#> [1] 0.9999989 1.9999981
+#> [1] 1.000273 1.999246
 ```
 
 ## Algorithm parameters
-
 The most commonly tuned parameters are:
 
 - `max_evaluations`: maximum number of objective evaluations.

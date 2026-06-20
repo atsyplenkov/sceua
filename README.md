@@ -56,7 +56,7 @@ The R package exposes SCE-UA as a conventional optimiser via the `rextendr` fram
 
 ```r
 library(sceua)
-
+set.seed(1969)
 result <- sceua(
   fn = function(x) sum(x^2),
   lower = c(-5, -5),
@@ -64,7 +64,6 @@ result <- sceua(
   max_evaluations = 5000,
   kstop = 5,
   pcento = 1e-8,
-  seed = 1969,
   complexes = 5
 )
 ```

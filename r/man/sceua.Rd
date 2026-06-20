@@ -12,7 +12,6 @@ sceua(
   max_evaluations = 10000L,
   kstop = 5L,
   pcento = 0.01,
-  seed = 1969L,
   complexes = 2L,
   points_per_complex = NULL,
   simplex_size = NULL,
@@ -42,7 +41,6 @@ change by \code{pcento} before convergence.}
 
 \item{pcento}{Objective convergence threshold.}
 
-\item{seed}{Random seed passed to the Fortran-compatible RAN1 generator.}
 
 \item{complexes}{Number of complexes in the initial population.}
 
@@ -78,7 +76,12 @@ Find the parameter set that minimizes an objective function using the
 Shuffled Complex Evolution - University of Arizona algorithm
 (Duan et al., 1992).
 }
+\details{
+The R wrapper draws the internal SCE-UA seed from R's global random number
+generator. Call \code{set.seed()} before \code{sceua()} for reproducible results.
+}
 \examples{
+set.seed(1969)
 # Two-dimensional sphere
 result <- sceua(
   fn = function(x) sum(x^2),
@@ -87,7 +90,6 @@ result <- sceua(
   max_evaluations = 5000,
   kstop = 5,
   pcento = 1e-8,
-  seed = 1969,
   complexes = 5
 )
 result
