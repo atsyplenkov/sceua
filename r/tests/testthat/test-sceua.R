@@ -68,6 +68,7 @@ test_that("sceua inherits R's RNG state", {
     )
   }
 
+  # Test that the same seed produces the same result
   set.seed(42)
   first <- run_sceua()
   set.seed(42)
@@ -76,4 +77,12 @@ test_that("sceua inherits R's RNG state", {
   expect_equal(first$par, second$par)
   expect_equal(first$value, second$value)
   expect_equal(first$history, second$history)
+
+  # Test that different seeds produce different results
+  set.seed(1234)
+  third <- run_sceua()
+
+  expect_false(isTRUE(all.equal(first$par, third$par)))
+  expect_false(isTRUE(all.equal(first$value, third$value)))
+  expect_false(isTRUE(all.equal(first$history, third$history)))
 })
