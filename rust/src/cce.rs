@@ -150,8 +150,9 @@ fn centroid_without_worst(
             *sum += *value;
         }
     }
+    let inv = 1.0 / divisor;
     for value in scratch.centroid.iter_mut().take(dimension) {
-        *value /= divisor;
+        *value *= inv;
     }
 }
 
