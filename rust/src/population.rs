@@ -148,16 +148,19 @@ pub(crate) fn sample_simplex_indices(
 // See https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L618-L644
 
 pub(crate) fn compress_complexes(
-    population: &[Point],
+    population: Vec<Point>,
     old_complexes: usize,
     new_complexes: usize,
     points_per_complex: usize,
 ) -> Vec<Point> {
     let mut compressed = Vec::with_capacity(new_complexes * points_per_complex);
-    for point_index in 0..points_per_complex {
-        for complex_index in 0..new_complexes {
-            let old_index = point_index * old_complexes + complex_index;
-            compressed.push(population[old_index].clone());
+    let mut population = population.into_iter();
+    for _ in 0..points_per_complex {
+        for complex_index in 0..old_complexes {
+            let point = population.next().expect("population has expected size");
+            if complex_index < new_complexes {
+                compressed.push(point);
+            }
         }
     }
     compressed
@@ -227,7 +230,7 @@ mod tests {
     #[test]
     fn comp_drops_lowest_ranked_complex() {
         let population: Vec<_> = (0..9).map(|i| point(&[i as f64], i as f64)).collect();
-        let compressed = compress_complexes(&population, 3, 2, 3);
+        let compressed = compress_complexes(population, 3, 2, 3);
         let values: Vec<_> = compressed
             .iter()
             .map(|point| point.value as usize)

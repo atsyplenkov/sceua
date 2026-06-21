@@ -328,7 +328,7 @@ where
         if current_complexes > resolved.min_complexes {
             let reduced = current_complexes - 1;
             population = compress_complexes(
-                &population,
+                population,
                 current_complexes,
                 reduced,
                 resolved.points_per_complex,
