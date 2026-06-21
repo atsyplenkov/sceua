@@ -156,8 +156,15 @@ for (idx in workspace_dep_idx) {
 # insert the new deps
 new_cargo_toml <- insert_items(new_cargo_toml, dependencies = pkg_deps)
 
-# Preserve the release profile when this crate becomes the CRAN build root.
-release_profile <- list(lto = TRUE, `codegen-units` = 1L)
+# Preserve the optimized release profile when this crate becomes the CRAN build root.
+release_profile <- list(
+  `opt-level` = 3L,
+  lto = "fat",
+  `codegen-units` = 1L,
+  debug = FALSE,
+  strip = "symbols",
+  incremental = FALSE
+)
 new_cargo_toml <- insert_items(
   new_cargo_toml,
   profile = list(release = release_profile)

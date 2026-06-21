@@ -18,5 +18,9 @@ sceua = { path = "rust" }
 unsafe_code = "forbid"
 
 [profile.release]
-lto = true
+opt-level = 3
+lto = "fat"
 codegen-units = 1
+debug = false
+strip = "symbols"
+incremental = false

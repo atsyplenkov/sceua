@@ -30,6 +30,10 @@ lint-rs-fix:
 test-rs:
     cargo test -p sceua --locked
 
+# Build the core crate with the optimized release profile
+build-rs-release:
+    cargo build -p sceua --release --locked
+
 # Run Rust benchmarks for the core SCE-UA crate
 rust-bench:
     cargo bench -p sceua
