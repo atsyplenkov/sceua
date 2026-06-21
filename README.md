@@ -45,7 +45,10 @@ let result = minimize(
     &[-5.0, -5.0],
     &[5.0, 5.0],
     Config::default(),
-)?;
+).unwrap();
+
+println!("best = {:?}", result.best_x);
+println!("value = {}", result.best_f);
 ```
 
 See [`rust/README.md`](rust/README.md) for details.
