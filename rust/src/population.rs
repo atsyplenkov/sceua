@@ -169,8 +169,9 @@ pub(crate) fn compress_complexes(
 fn sample_rank(points_per_complex: usize, rng: &mut DuanRng) -> usize {
     let npg = points_per_complex as f64;
     let random = rng.uniform();
+    let npg_half = npg + 0.5;
     let one_based =
-        1.0 + (npg + 0.5 - ((npg + 0.5).powi(2) - npg * (npg + 1.0) * random).sqrt()).trunc();
+        1.0 + (npg_half - (npg_half * npg_half - npg * (npg + 1.0) * random).sqrt()).trunc();
     one_based as usize - 1
 }
 
