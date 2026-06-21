@@ -43,6 +43,7 @@ pub(crate) fn parameter_stats(points: &[Point], lower: &[f64], upper: &[f64]) ->
         let mut sum_squares = 0.0;
 
         for point in points {
+            debug_assert_eq!(point.x.len(), dimension);
             let value = point.x[parameter];
             min_value = min_value.min(value);
             max_value = max_value.max(value);
@@ -165,7 +166,6 @@ pub(crate) fn compress_complexes(
     }
     compressed
 }
-
 fn sample_rank(points_per_complex: usize, rng: &mut DuanRng) -> usize {
     let npg = points_per_complex as f64;
     let random = rng.uniform();
