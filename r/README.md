@@ -29,7 +29,7 @@ Or the development version from GitHub:
 pak::pak("atsyplenkov/sceua/r")
 ```
 
-Building from source requires a [Rust toolchain](https://www.rust-lang.org/tools/install).
+Building from source requires a [Rust toolchain](https://rust-lang.org/tools/install/).
 
 ## Example
 
