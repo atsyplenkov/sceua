@@ -20,14 +20,13 @@ let result = minimize(
     &[-5.0, -5.0],
     &[5.0, 5.0],
     Config::default(),
-)?;
+).unwrap();
 
 println!("best = {:?}", result.best_x);
 println!("value = {}", result.best_f);
 ```
 
 ## Features
-
 - `minimize(f, lower, upper, config)` — optimisation of a bounded objective
   function.
 - Configurable population geometry, convergence criteria, and initial point.
@@ -49,6 +48,8 @@ println!("value = {}", result.best_f);
 | `simplex_size` | `n + 1` | Points per sub-complex |
 | `evolution_steps` | `points_per_complex` | Evolution steps before shuffling |
 | `min_complexes` | `complexes` | Minimum complexes after reduction |
+| `include_initial` | `false` | Include `initial_point` in the initial population |
+| `initial_point` | `None` | User-supplied starting parameter set |
 | `parameter_epsilon` | `1e-3` | Parameter-space convergence threshold |
 
 Here `n` is the number of parameters (the length of `lower`/`upper`).
@@ -66,6 +67,17 @@ Here `n` is the number of parameters (the length of `lower`/`upper`).
   `ObjectiveConvergence`, or `ParameterConvergence`).
 - `history`: per-loop history of best/worst objective values, geometric range,
   and population metrics.
+
+## Test functions
+
+The `duan_test_func` module exposes the seven benchmark functions from [Duan's
+Matlab SCE-UA suite](https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method) (Goldstein-Price, Rosenbrock, Griewank, Shekel, Hartman,
+etc.). They can be used for validation or custom benchmarking:
+
+```rust
+use sceua::duan_test_func::rosenbrock;
+assert_eq!(rosenbrock(&[1.0, 1.0]), 0.0);
+```
 
 ## Development
 

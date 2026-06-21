@@ -130,16 +130,26 @@ bench::mark(
   ),
   iterations = 25,
   relative = FALSE,
-  check = function(x, y) isTRUE(all.equal(x, y, tolerance = 1e-3))
+  check = FALSE
 )
 ```
 
 ## Q. Duan's test-function benchmarks
 
-The following benchmarks use R translations of the Q. Duan test functions published alongside the [Matlab code](https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method). We use one aligned strict configuration for
-all problems: objective convergence is disabled and parameter convergence is
-tightened to `1e-6`. Timing benchmarks are only run for packages that return
-finite values and agree with at least one other package within `1e-3`. Spoiler, not all packages return finite values...
+The following benchmarks use R translations of the Q. Duan test functions
+published alongside the [Matlab code](https://www.mathworks.com/matlabcentral/fileexchange/7671-shuffled-complex-evolution-sce-ua-method).
+We use one aligned strict configuration for all problems: objective
+convergence is disabled (`pcento = 0`) and parameter convergence is tightened
+to `1e-6`. The same seed is used for every package so the initial populations
+are comparable.
+
+Each problem below gets its own table with the best value found, the known
+optimum, the mean absolute error (`MAE` = `|value - optimum|`), the median
+wall-clock time over 5 timed runs, and a `Timing` bar scaled to the slowest
+run within that problem (a full bar marks the slowest package). Every package
+is timed on every problem; cells show `—` only when a package errors or fails
+to return a finite value. Per-problem bounds are visible in the folded code
+chunk below.
 
 ```{r duan-test-functions, eval = benchmark_packages_available}
 #| code-fold: true
@@ -218,8 +228,7 @@ duan_control <- list(
   max_evaluations = 10000L,
   kstop = 5L,
   pcento = 0,
-  parameter_epsilon = 1e-6,
-  tolerance = 1e-3
+  parameter_epsilon = 1e-6
 )
 
 duan_problems <- list(
@@ -351,125 +360,144 @@ safe_duan_value <- function(package, problem) {
   as.numeric(value)
 }
 
-validate_duan_problem <- function(name, problem) {
-  packages <- c("sceua", "rtop", "soilhyp")
-  values <- vapply(packages, safe_duan_value, numeric(1), problem = problem)
-  finite_values <- values[is.finite(values)]
-  agrees <- length(finite_values) >= 2L &&
-    isTRUE(all.equal(
-      unname(finite_values),
-      rep(unname(finite_values[1]), length(finite_values)),
-      tolerance = duan_control$tolerance
-    ))
+# Number of timed runs per (problem, package). bench::mark runs each
+# expression exactly this many times.
+duan_iterations <- 5L
 
-  data.frame(
-    #problem = name,
-    #package = packages,
-    value = values,
-    error = values - problem$optimum,
-    timed = is.finite(values) & agrees,
-    stringsAsFactors = FALSE
-  )
+# Dependency-free cell visual: a fixed-width unicode bar for a scalar value
+# scaled to a per-problem maximum. A positive sub-maximum value always gets
+# at least one filled cell so the fastest run still shows a sliver.
+bar_text <- function(value, max_value, width = 10L,
+                     fill = "\u2588", empty = "\u2591") {
+  if (is.na(value) || is.na(max_value) || max_value == 0) return("")
+  n <- round(width * value / max_value)
+  if (value > 0 && value < max_value) n <- max(n, 1L)
+  n <- min(max(n, 0L), width)
+  paste0(strrep(fill, n), strrep(empty, width - n))
 }
 
-duan_validation <- do.call(
-  rbind,
-  Map(validate_duan_problem, names(duan_problems), duan_problems)
-)
+fmt_time <- function(seconds) {
+  if (is.na(seconds)) return("\u2014")
+  if (seconds >= 1) return(sprintf("%.2f s", seconds))
+  if (seconds >= 1e-3) return(sprintf("%.2f ms", seconds * 1e3))
+  sprintf("%.0f \u00b5s", seconds * 1e6)
+}
 
-duan_timing_problems <- unique(duan_validation$problem[duan_validation$timed])
-
-benchmark_duan_problem <- function(name, iterations = 3) {
-  timed_packages <- duan_validation$package[
-    duan_validation$problem == name & duan_validation$timed
-  ]
-  if (length(timed_packages) < 2L) {
-    message("Skipping timing benchmark: fewer than two packages agree.")
-    return(invisible(NULL))
-  }
-
+# Compute the best value for every (problem, package) pair. `safe_duan_value`
+# returns NA when a package errors, so a failed run still has a row.
+packages <- c("sceua", "rtop", "soilhyp")
+duan_values <- do.call(rbind, lapply(names(duan_problems), function(name) {
   problem <- duan_problems[[name]]
-  expressions <- list(
+  values <- vapply(packages, safe_duan_value, numeric(1), problem = problem)
+  data.frame(
+    problem = name,
+    package = packages,
+    value = values,
+    abs_error = abs(values - problem$optimum),
+    stringsAsFactors = FALSE
+  )
+}))
+
+# Time every pair. `check = FALSE` disables bench's result-equality check; the
+# tables below compare values to the optimum explicitly. A pair that errors is
+# recorded with `NA` median time rather than aborting the vignette.
+benchmark_duan_row <- function(name, package, problem) {
+  exprs <- list(
     sceua = quote(sceua_duan_value(problem)),
     rtop = quote(rtop_duan_value(problem)),
     soilhyp = quote(soilhyp_duan_value(problem))
   )
-  do.call(
-    bench::mark,
-    c(
-      expressions[timed_packages],
-      list(
-        iterations = iterations,
-        relative = FALSE,
-        check = function(x, y) {
-          isTRUE(all.equal(x, y, tolerance = duan_control$tolerance))
-        }
-      )
-    )
+  set.seed(duan_control$seed)
+  res <- tryCatch(
+    bench::mark(
+      eval(exprs[[package]]),
+      iterations = duan_iterations,
+      relative = FALSE,
+      check = FALSE
+    ),
+    error = function(e) NULL
+  )
+  median_time <- if (is.null(res)) NA_real_ else as.numeric(res$median[[1]])
+  data.frame(
+    problem = name,
+    package = package,
+    median_time = median_time,
+    stringsAsFactors = FALSE
+  )
+}
+
+duan_timing <- do.call(rbind, lapply(names(duan_problems), function(name) {
+  problem <- duan_problems[[name]]
+  do.call(rbind, lapply(packages, function(pkg) {
+    benchmark_duan_row(name, pkg, problem)
+  }))
+}))
+
+duan_summary <- merge(
+  duan_values,
+  duan_timing,
+  by = c("problem", "package"),
+  sort = FALSE
+)
+duan_summary <- duan_summary[order(
+  match(duan_summary$problem, names(duan_problems)),
+  match(duan_summary$package, packages)
+), ]
+duan_summary$optimum <- vapply(
+  duan_summary$problem,
+  function(n) duan_problems[[n]]$optimum,
+  numeric(1)
+)
+
+fmt_value <- function(x) ifelse(is.na(x), "\u2014", sprintf("%.6g", x))
+fmt_err <- function(x) ifelse(is.na(x), "\u2014", sprintf("%.3e", x))
+
+# Per-problem table. The Timing bar is scaled to the slowest run within the
+# problem, so a full bar marks the slowest package and shorter bars mark
+# faster ones. A package that errors shows em dashes.
+duan_problem_table <- function(name) {
+  rows <- duan_summary[duan_summary$problem == name, , drop = FALSE]
+  max_time <- if (all(is.na(rows$median_time))) {
+    NA_real_
+  } else {
+    max(rows$median_time, na.rm = TRUE)
+  }
+  timing_bar <- vapply(
+    rows$median_time, bar_text, character(1), max_value = max_time
+  )
+
+  data.frame(
+    Package = rows$package,
+    `Best value` = fmt_value(rows$value),
+    Optimum = sprintf("%.6g", rows$optimum[1]),
+    MAE = fmt_err(rows$abs_error),
+    `Median time` = vapply(rows$median_time, fmt_time, character(1)),
+    Timing = ifelse(timing_bar == "", "\u2014", timing_bar),
+    check.names = FALSE,
+    stringsAsFactors = FALSE
+  )
+}
+
+duan_problem_caption <- function(name) {
+  p <- duan_problems[[name]]
+  sprintf(
+    "%s: bounds [%s], optimum %g, %d parameters",
+    name,
+    paste(sprintf("[%g, %g]", p$lower, p$upper), collapse = ", "),
+    p$optimum,
+    length(p$lower)
   )
 }
 ```
 
-```{r duan-validation, eval = benchmark_packages_available}
-duan_validation
-```
-
-### Goldstein-Price function
-
-Bounds: `[-2, 2]` for both parameters. Global minimum: `f(0, -1) = 3`.
-
-```{r benchmark-goldstein-price, eval = benchmark_packages_available}
-benchmark_duan_problem("goldstein_price")
-```
-
-### Rosenbrock function
-
-Bounds: `[-5, 5]` for both parameters. Global minimum: `f(1, 1) = 0`.
-
-```{r benchmark-rosenbrock, eval = benchmark_packages_available}
-benchmark_duan_problem("rosenbrock")
-```
-
-### Six-hump camelback function
-
-Bounds: `[-5, 5]` for the first parameter and `[-2, 8]` for the second.
-Global minimum: approximately `f(0.08983, -0.7126) = -1.031628`.
-
-```{r benchmark-six-hump-camelback, eval = benchmark_packages_available}
-benchmark_duan_problem("six_hump_camelback")
-```
-
-### Rastrigin-like function
-
-Bounds: `[-1, 1]` for both parameters. Global minimum: `f(0, 0) = -2`.
-
-```{r benchmark-rastrigin-duan, eval = benchmark_packages_available}
-benchmark_duan_problem("rastrigin_duan")
-```
-
-### Griewank function
-
-Bounds: `[-600, 600]` for all ten parameters. Global minimum:
-`f(0, ..., 0) = 0`.
-
-```{r benchmark-griewank-duan, eval = benchmark_packages_available}
-benchmark_duan_problem("griewank_duan")
-```
-
-### Shekel function
-
-Bounds: `[0, 10]` for all four parameters. Global minimum: approximately
-`f(4, 4, 4, 4) = -10.5363`.
-
-```{r benchmark-shekel, eval = benchmark_packages_available}
-benchmark_duan_problem("shekel")
-```
-
-### Hartman function
-
-Bounds: `[0, 1]` for all six parameters. Global minimum: approximately
-`f(0.201, 0.150, 0.477, 0.275, 0.311, 0.657) = -3.3223`.
-
-```{r benchmark-hartman, eval = benchmark_packages_available}
-benchmark_duan_problem("hartman")
+```{r duan-summary, results='asis', eval = benchmark_packages_available}
+for (name in names(duan_problems)) {
+  cat("###", name, "\n\n")
+  cat(knitr::kable(
+    duan_problem_table(name),
+    align = c("l", "r", "r", "r", "r", "l"),
+    caption = duan_problem_caption(name)
+  ), sep = "\n")
+  cat("\n\n")
+}
 ```
