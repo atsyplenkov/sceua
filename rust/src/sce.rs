@@ -1,5 +1,5 @@
 use crate::{
-    cce::evolve_simplex,
+    cce::{evolve_simplex, CceScratch, ComplexLayout},
     config::{Config, ResolvedConfig},
     error::SceuaError,
     population::{
@@ -224,19 +224,14 @@ where
 
     let mut best_by_loop = Vec::new();
     let mut sampler = SimplexSampler::default();
+    let mut cce_scratch = CceScratch::default();
     let mut loops = 0usize;
 
     loop {
         loops += 1;
 
         for complex_index in 0..current_complexes {
-            let mut complex = partition_complex(
-                &population,
-                complex_index,
-                current_complexes,
-                resolved.points_per_complex,
-            );
-
+            let layout = ComplexLayout::new(complex_index, current_complexes);
             for _ in 0..resolved.evolution_steps {
                 if evaluations >= resolved.max_evaluations {
                     break;
@@ -244,35 +239,29 @@ where
 
                 let simplex_indices =
                     sampler.sample(resolved.points_per_complex, resolved.simplex_size, &mut rng);
-                let mut simplex: Vec<_> = simplex_indices
-                    .iter()
-                    .map(|&index| complex[index].clone())
-                    .collect();
 
-                evolve_simplex(
-                    &mut simplex,
+                if let Some(changed_rank) = evolve_simplex(
+                    &mut population,
+                    layout,
+                    simplex_indices,
                     lower,
                     upper,
                     &current_stats.normalized_std,
+                    &mut cce_scratch,
                     &mut rng,
                     &mut evaluations,
                     resolved.max_evaluations,
                     &mut objective,
-                )?;
-
-                for (&complex_position, point) in simplex_indices.iter().zip(simplex) {
-                    complex[complex_position] = point;
+                )? {
+                    reposition_complex_point(
+                        &mut population,
+                        complex_index,
+                        current_complexes,
+                        resolved.points_per_complex,
+                        changed_rank,
+                    );
                 }
-                sort_points(&mut complex);
             }
-
-            replace_complex(
-                &mut population,
-                &complex,
-                complex_index,
-                current_complexes,
-                resolved.points_per_complex,
-            );
 
             if evaluations >= resolved.max_evaluations {
                 break;
@@ -425,26 +414,41 @@ where
     }
 }
 
-fn partition_complex(
-    population: &[Point],
-    complex_index: usize,
-    complexes: usize,
-    points_per_complex: usize,
-) -> Vec<Point> {
-    (0..points_per_complex)
-        .map(|point_index| population[point_index * complexes + complex_index].clone())
-        .collect()
-}
-
-fn replace_complex(
+fn reposition_complex_point(
     population: &mut [Point],
-    complex: &[Point],
     complex_index: usize,
     complexes: usize,
     points_per_complex: usize,
+    mut rank: usize,
 ) {
-    for point_index in 0..points_per_complex {
-        population[point_index * complexes + complex_index] = complex[point_index].clone();
+    while rank > 0 {
+        let current = rank * complexes + complex_index;
+        let previous = (rank - 1) * complexes + complex_index;
+        if population[current]
+            .value
+            .total_cmp(&population[previous].value)
+            .is_lt()
+        {
+            population.swap(current, previous);
+            rank -= 1;
+        } else {
+            break;
+        }
+    }
+
+    while rank + 1 < points_per_complex {
+        let current = rank * complexes + complex_index;
+        let next = (rank + 1) * complexes + complex_index;
+        if population[next]
+            .value
+            .total_cmp(&population[current].value)
+            .is_lt()
+        {
+            population.swap(current, next);
+            rank += 1;
+        } else {
+            break;
+        }
     }
 }
 
@@ -490,6 +494,46 @@ fn result(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn point(x: f64, value: f64) -> Point {
+        Point { x: vec![x], value }
+    }
+
+    #[test]
+    fn reposition_complex_point_matches_stable_sort_order() {
+        let mut population = vec![
+            point(0.0, 1.0),
+            point(1.0, 2.0),
+            point(2.0, 2.0),
+            point(3.0, 3.0),
+        ];
+        population[1].value = 3.0;
+        let mut expected = population.clone();
+        sort_points(&mut expected);
+
+        reposition_complex_point(&mut population, 0, 1, 4, 1);
+
+        assert_eq!(population, expected);
+    }
+
+    #[test]
+    fn reposition_complex_point_uses_strided_complex_layout() {
+        let mut population = vec![
+            point(0.0, 0.0),
+            point(10.0, 1.0),
+            point(1.0, 2.0),
+            point(11.0, 5.0),
+            point(2.0, 4.0),
+            point(12.0, 6.0),
+        ];
+        population[3].value = 7.0;
+
+        reposition_complex_point(&mut population, 1, 2, 3, 1);
+
+        assert_eq!(population[1], point(10.0, 1.0));
+        assert_eq!(population[3], point(12.0, 6.0));
+        assert_eq!(population[5], point(11.0, 7.0));
+    }
 
     #[test]
     fn minimize_rejects_mismatched_bounds() {

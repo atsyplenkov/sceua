@@ -1,5 +1,45 @@
 use crate::{error::SceuaError, population::Point, rng::DuanRng};
 
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct ComplexLayout {
+    offset: usize,
+    stride: usize,
+}
+
+impl ComplexLayout {
+    pub(crate) fn new(offset: usize, stride: usize) -> Self {
+        Self { offset, stride }
+    }
+
+    fn point_index(self, rank: usize) -> usize {
+        rank * self.stride + self.offset
+    }
+}
+
+#[derive(Debug, Default)]
+pub(crate) struct CceScratch {
+    worst: Vec<f64>,
+    centroid: Vec<f64>,
+    step: Vec<f64>,
+    trial: Vec<f64>,
+}
+
+impl CceScratch {
+    fn resize(&mut self, dimension: usize) {
+        self.worst.resize(dimension, 0.0);
+        self.centroid.resize(dimension, 0.0);
+        self.step.resize(dimension, 0.0);
+        self.trial.resize(dimension, 0.0);
+    }
+}
+
+#[derive(Clone, Copy)]
+struct SearchSpace<'a> {
+    lower: &'a [f64],
+    upper: &'a [f64],
+    normalized_std: &'a [f64],
+}
+
 // CCE subroutine.
 // reflection -> contraction -> Gaussian mutation sequence
 // See
@@ -10,122 +50,143 @@ use crate::{error::SceuaError, population::Point, rng::DuanRng};
     reason = "CCE mirrors Duan's Fortran/Matlab argument list"
 )]
 pub(crate) fn evolve_simplex<F>(
-    simplex: &mut [Point],
+    points: &mut [Point],
+    layout: ComplexLayout,
+    simplex_indices: &[usize],
     lower: &[f64],
     upper: &[f64],
     normalized_std: &[f64],
+    scratch: &mut CceScratch,
     rng: &mut DuanRng,
     evaluations: &mut usize,
     max_evaluations: usize,
     objective: &mut F,
-) -> Result<(), SceuaError>
+) -> Result<Option<usize>, SceuaError>
 where
     F: FnMut(&[f64]) -> f64,
 {
-    if simplex.is_empty() || *evaluations >= max_evaluations {
-        return Ok(());
+    if simplex_indices.is_empty() || *evaluations >= max_evaluations {
+        return Ok(None);
     }
 
-    let worst_index = simplex.len() - 1;
+    let search = SearchSpace {
+        lower,
+        upper,
+        normalized_std,
+    };
     let dimension = lower.len();
-    let worst = simplex[worst_index].x.clone();
-    let worst_value = simplex[worst_index].value;
-    let centroid = centroid_without_worst(simplex, dimension);
-    let step: Vec<_> = centroid
-        .iter()
-        .zip(&worst)
-        .map(|(&ce, &wo)| ce - wo)
-        .collect();
+    scratch.resize(dimension);
 
-    let reflected: Vec<_> = worst
-        .iter()
-        .zip(&step)
-        .map(|(&wo, &step)| wo + 2.0 * step)
-        .collect();
-    let mut trial = if within_bounds(&reflected, lower, upper) {
-        reflected
-    } else {
-        gaussian_point(simplex, lower, upper, normalized_std, rng)
-    };
+    let worst_rank = *simplex_indices
+        .last()
+        .expect("simplex_indices is not empty");
+    let worst_index = layout.point_index(worst_rank);
+    scratch.worst.copy_from_slice(&points[worst_index].x);
+    let worst_value = points[worst_index].value;
 
-    let mut trial_value = evaluate(objective, &trial, evaluations)?;
+    centroid_without_worst(points, layout, simplex_indices, dimension, scratch);
+    for parameter in 0..dimension {
+        scratch.step[parameter] = scratch.centroid[parameter] - scratch.worst[parameter];
+        scratch.trial[parameter] = scratch.worst[parameter] + 2.0 * scratch.step[parameter];
+    }
+
+    if !within_bounds(&scratch.trial, search) {
+        gaussian_point(
+            points,
+            layout,
+            simplex_indices[0],
+            search,
+            rng,
+            &mut scratch.trial,
+        );
+    }
+
+    let mut trial_value = evaluate(objective, &scratch.trial, evaluations)?;
     if trial_value <= worst_value {
-        simplex[worst_index] = Point {
-            x: trial,
-            value: trial_value,
-        };
-        return Ok(());
+        replace_point(&mut points[worst_index], &scratch.trial, trial_value);
+        return Ok(Some(worst_rank));
     }
     if *evaluations >= max_evaluations {
-        return Ok(());
+        return Ok(None);
     }
 
-    trial = worst
-        .iter()
-        .zip(&step)
-        .map(|(&wo, &step)| wo + 0.5 * step)
-        .collect();
-    trial_value = evaluate(objective, &trial, evaluations)?;
+    for parameter in 0..dimension {
+        scratch.trial[parameter] = scratch.worst[parameter] + 0.5 * scratch.step[parameter];
+    }
+    trial_value = evaluate(objective, &scratch.trial, evaluations)?;
     if trial_value <= worst_value {
-        simplex[worst_index] = Point {
-            x: trial,
-            value: trial_value,
-        };
-        return Ok(());
+        replace_point(&mut points[worst_index], &scratch.trial, trial_value);
+        return Ok(Some(worst_rank));
     }
     if *evaluations >= max_evaluations {
-        return Ok(());
+        return Ok(None);
     }
 
-    trial = gaussian_point(simplex, lower, upper, normalized_std, rng);
-    trial_value = evaluate(objective, &trial, evaluations)?;
-    simplex[worst_index] = Point {
-        x: trial,
-        value: trial_value,
-    };
-    Ok(())
+    gaussian_point(
+        points,
+        layout,
+        simplex_indices[0],
+        search,
+        rng,
+        &mut scratch.trial,
+    );
+    trial_value = evaluate(objective, &scratch.trial, evaluations)?;
+    replace_point(&mut points[worst_index], &scratch.trial, trial_value);
+    Ok(Some(worst_rank))
 }
 
-fn centroid_without_worst(simplex: &[Point], dimension: usize) -> Vec<f64> {
-    let divisor = (simplex.len() - 1) as f64;
-    let mut centroid = vec![0.0; dimension];
-    for point in &simplex[..simplex.len() - 1] {
-        for (sum, value) in centroid.iter_mut().zip(&point.x) {
+fn centroid_without_worst(
+    points: &[Point],
+    layout: ComplexLayout,
+    simplex_indices: &[usize],
+    dimension: usize,
+    scratch: &mut CceScratch,
+) {
+    let divisor = (simplex_indices.len() - 1) as f64;
+    scratch.centroid.fill(0.0);
+    for &rank in &simplex_indices[..simplex_indices.len() - 1] {
+        let point = &points[layout.point_index(rank)];
+        for (sum, value) in scratch.centroid.iter_mut().zip(&point.x) {
             *sum += *value;
         }
     }
-    for value in &mut centroid {
+    for value in scratch.centroid.iter_mut().take(dimension) {
         *value /= divisor;
     }
-    centroid
 }
 
 fn gaussian_point(
-    simplex: &[Point],
-    lower: &[f64],
-    upper: &[f64],
-    normalized_std: &[f64],
+    points: &[Point],
+    layout: ComplexLayout,
+    best_rank: usize,
+    search: SearchSpace<'_>,
     rng: &mut DuanRng,
-) -> Vec<f64> {
-    let best = &simplex[0].x;
-    let mut point = Vec::with_capacity(best.len());
-    for (parameter, &best_value) in best.iter().enumerate() {
-        let bound = upper[parameter] - lower[parameter];
+    trial: &mut [f64],
+) {
+    let best = &points[layout.point_index(best_rank)].x;
+    for (parameter, value) in trial.iter_mut().enumerate() {
+        let bound = search.upper[parameter] - search.lower[parameter];
         loop {
-            let candidate = best_value + normalized_std[parameter] * rng.gaussian() * bound;
-            if candidate >= lower[parameter] && candidate <= upper[parameter] {
-                point.push(candidate);
+            let candidate =
+                best[parameter] + search.normalized_std[parameter] * rng.gaussian() * bound;
+            if candidate >= search.lower[parameter] && candidate <= search.upper[parameter] {
+                *value = candidate;
                 break;
             }
         }
     }
-    point
 }
 
-fn within_bounds(point: &[f64], lower: &[f64], upper: &[f64]) -> bool {
+fn replace_point(point: &mut Point, trial: &[f64], value: f64) {
+    point.x.clear();
+    point.x.extend_from_slice(trial);
+    point.value = value;
+}
+
+fn within_bounds(point: &[f64], search: SearchSpace<'_>) -> bool {
     point
         .iter()
-        .zip(lower.iter().zip(upper))
+        .zip(search.lower.iter().zip(search.upper))
         .all(|(&value, (&lo, &hi))| value >= lo && value <= hi)
 }
 
@@ -150,6 +211,10 @@ mod tests {
         Point { x: vec![x], value }
     }
 
+    fn layout() -> ComplexLayout {
+        ComplexLayout::new(0, 1)
+    }
+
     // Mirrors Fortran CCE paths: reflection, contraction, mutation, and maxn stop.
     // https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L431-L546
 
@@ -160,17 +225,23 @@ mod tests {
         let mut evaluations = 0;
         let mut objective = |x: &[f64]| x[0] * x[0];
 
-        evolve_simplex(
+        let mut scratch = CceScratch::default();
+        let changed = evolve_simplex(
             &mut simplex,
+            layout(),
+            &[0, 1, 2],
             &[-10.0],
             &[10.0],
             &[0.1],
+            &mut scratch,
             &mut rng,
             &mut evaluations,
             10,
             &mut objective,
         )
         .unwrap();
+
+        assert_eq!(changed, Some(2));
 
         assert_eq!(evaluations, 1);
         assert!((simplex[2].x[0] + 1.0).abs() < 1.0e-12);
@@ -184,17 +255,23 @@ mod tests {
         let mut evaluations = 0;
         let mut objective = |x: &[f64]| (x[0] - 1.0) * (x[0] - 1.0);
 
-        evolve_simplex(
+        let mut scratch = CceScratch::default();
+        let changed = evolve_simplex(
             &mut simplex,
+            layout(),
+            &[0, 1, 2],
             &[-10.0],
             &[10.0],
             &[0.1],
+            &mut scratch,
             &mut rng,
             &mut evaluations,
             10,
             &mut objective,
         )
         .unwrap();
+
+        assert_eq!(changed, Some(2));
 
         assert_eq!(evaluations, 2);
         assert!((simplex[2].x[0] - 1.25).abs() < 1.0e-12);
@@ -208,17 +285,23 @@ mod tests {
         let mut evaluations = 0;
         let mut objective = |x: &[f64]| (x[0] - 0.9).abs();
 
-        evolve_simplex(
+        let mut scratch = CceScratch::default();
+        let changed = evolve_simplex(
             &mut simplex,
+            layout(),
+            &[0, 1],
             &[0.0],
             &[1.0],
             &[0.05],
+            &mut scratch,
             &mut rng,
             &mut evaluations,
             10,
             &mut objective,
         )
         .unwrap();
+
+        assert_eq!(changed, Some(1));
 
         assert_eq!(evaluations, 1);
         assert!(simplex[1].x[0] >= 0.0 && simplex[1].x[0] <= 1.0);
@@ -232,17 +315,23 @@ mod tests {
         let mut evaluations = 0;
         let mut objective = |_x: &[f64]| 2.0;
 
-        evolve_simplex(
+        let mut scratch = CceScratch::default();
+        let changed = evolve_simplex(
             &mut simplex,
+            layout(),
+            &[0, 1, 2],
             &[-10.0],
             &[10.0],
             &[0.1],
+            &mut scratch,
             &mut rng,
             &mut evaluations,
             1,
             &mut objective,
         )
         .unwrap();
+
+        assert_eq!(changed, None);
 
         assert_eq!(evaluations, 1);
         assert_eq!(simplex[2], point(2.0, 1.0));
