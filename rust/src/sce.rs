@@ -121,7 +121,7 @@ where
 
     while population.len() < target_population && evaluations < resolved.max_evaluations {
         let point = random_point(lower, upper, rng);
-        population.push(evaluate_point(objective, &point, &mut evaluations)?);
+        population.push(evaluate_owned_point(objective, point, &mut evaluations)?);
     }
 
     Ok((population, evaluations))
@@ -157,14 +157,11 @@ where
     }
 
     let evaluated: Vec<_> = points
-        .par_iter()
+        .into_par_iter()
         .map(|point| {
-            let value = objective(point);
+            let value = objective(&point);
             if value.is_finite() {
-                Ok(Point {
-                    x: point.clone(),
-                    value,
-                })
+                Ok(Point { x: point, value })
             } else {
                 Err(SceuaError::NonFiniteObjective { value })
             }
@@ -408,6 +405,23 @@ where
             x: point.to_vec(),
             value,
         })
+    } else {
+        Err(SceuaError::NonFiniteObjective { value })
+    }
+}
+
+fn evaluate_owned_point<F>(
+    objective: &mut F,
+    point: Vec<f64>,
+    evaluations: &mut usize,
+) -> Result<Point, SceuaError>
+where
+    F: FnMut(&[f64]) -> f64,
+{
+    let value = objective(&point);
+    *evaluations += 1;
+    if value.is_finite() {
+        Ok(Point { x: point, value })
     } else {
         Err(SceuaError::NonFiniteObjective { value })
     }
