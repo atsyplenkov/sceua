@@ -41,6 +41,4 @@ mod duan_tests;
 
 pub use config::Config;
 pub use error::SceuaError;
-#[cfg(feature = "parallel")]
-pub use sce::minimize_parallel;
 pub use sce::{minimize, HistoryEntry, OptimizationResult, TerminationReason};

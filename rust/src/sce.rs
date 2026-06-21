@@ -9,9 +9,6 @@ use crate::{
     rng::DuanRng,
 };
 
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
-
 /// Final parameter estimate, criterion value, and search metadata.
 #[derive(Clone, Debug, PartialEq)]
 pub struct OptimizationResult {
@@ -98,38 +95,6 @@ where
     )
 }
 
-/// Run SCE-UA with parallel evaluation of the initial population.
-///
-/// After the initial population has been evaluated, the search follows the
-/// serial SCE-UA loop order. This keeps the shuffled-complex evolution
-/// deterministic for pure objective functions while allowing expensive initial
-/// criterion evaluations to use Rayon.
-#[cfg(feature = "parallel")]
-pub fn minimize_parallel<F>(
-    objective: F,
-    lower: &[f64],
-    upper: &[f64],
-    config: Config,
-) -> Result<OptimizationResult, SceuaError>
-where
-    F: Fn(&[f64]) -> f64 + Sync,
-{
-    validate_problem(lower, upper, &config)?;
-    let resolved = config.resolve(lower.len())?;
-    let mut rng = DuanRng::new(resolved.seed);
-    let (population, evaluations) =
-        initialize_population_parallel(&objective, lower, upper, &config, resolved, &mut rng)?;
-    continue_minimize(
-        objective,
-        lower,
-        upper,
-        resolved,
-        population,
-        evaluations,
-        rng,
-    )
-}
-
 fn initialize_population_serial<F>(
     objective: &mut F,
     lower: &[f64],
@@ -160,55 +125,6 @@ where
         population.push(evaluate_owned_point(objective, point, &mut evaluations)?);
     }
 
-    Ok((population, evaluations))
-}
-
-#[cfg(feature = "parallel")]
-fn initialize_population_parallel<F>(
-    objective: &F,
-    lower: &[f64],
-    upper: &[f64],
-    config: &Config,
-    resolved: ResolvedConfig,
-    rng: &mut DuanRng,
-) -> Result<(Vec<Point>, usize), SceuaError>
-where
-    F: Fn(&[f64]) -> f64 + Sync,
-{
-    let target_population = resolved.complexes * resolved.points_per_complex;
-    let mut points = Vec::with_capacity(target_population.min(resolved.max_evaluations));
-
-    if config.include_initial {
-        let initial = config
-            .initial_point
-            .as_deref()
-            .ok_or(SceuaError::InvalidConfig(
-                "include_initial requires initial_point",
-            ))?;
-        points.push(initial.to_vec());
-    }
-
-    while points.len() < target_population && points.len() < resolved.max_evaluations {
-        points.push(random_point(lower, upper, rng));
-    }
-
-    let evaluated: Vec<_> = points
-        .into_par_iter()
-        .map(|point| {
-            let value = objective(&point);
-            if value.is_finite() {
-                Ok(Point { x: point, value })
-            } else {
-                Err(SceuaError::NonFiniteObjective { value })
-            }
-        })
-        .collect();
-
-    let evaluations = evaluated.len();
-    let mut population = Vec::with_capacity(evaluations);
-    for point in evaluated {
-        population.push(point?);
-    }
     Ok((population, evaluations))
 }
 
@@ -606,30 +522,5 @@ mod tests {
                 | TerminationReason::ParameterConvergence
                 | TerminationReason::MaxEvaluations
         ));
-    }
-
-    // Parallel initialization should preserve the serial trajectory after initial sampling.
-    // Serial trajectory source: https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L152-L399
-
-    #[cfg(feature = "parallel")]
-    #[test]
-    fn parallel_minimize_matches_serial_for_pure_objective() {
-        let config = Config {
-            max_evaluations: 5_000,
-            kstop: 5,
-            pcento: 1.0e-8,
-            seed: 1969,
-            complexes: 5,
-            ..Config::default()
-        };
-        let objective = |x: &[f64]| x.iter().map(|value| value * value).sum::<f64>();
-
-        let serial = minimize(objective, &[-5.0, -5.0], &[5.0, 5.0], config.clone()).unwrap();
-        let parallel = minimize_parallel(objective, &[-5.0, -5.0], &[5.0, 5.0], config).unwrap();
-
-        assert_eq!(serial.best_x, parallel.best_x);
-        assert_eq!(serial.best_f, parallel.best_f);
-        assert_eq!(serial.evaluations, parallel.evaluations);
-        assert_eq!(serial.termination, parallel.termination);
     }
 }

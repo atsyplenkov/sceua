@@ -10,7 +10,6 @@ format:
 lint-rs:
     cargo clippy \
       --all-targets \
-      --all-features \
       --locked \
       -- \
       -D warnings \
@@ -22,7 +21,6 @@ lint-rs:
 lint-rs-fix:
     cargo clippy \
       --all-targets \
-      --all-features \
       --locked \
       --fix --allow-dirty
 
@@ -31,7 +29,6 @@ lint-rs-fix:
 # Run Rust tests for the core SCE-UA crate
 test-rs:
     cargo test -p sceua --locked
-    cargo test -p sceua --all-features --locked
 
 # Run Rust benchmarks for the core SCE-UA crate
 rust-bench:
@@ -89,6 +86,5 @@ preview:
 docs:
     cargo doc -p sceua \
         --no-deps \
-        --all-features \
         --locked \
         --open

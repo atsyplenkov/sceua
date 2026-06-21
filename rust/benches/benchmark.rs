@@ -3,9 +3,6 @@ use sceua::duan_test_func::*;
 use sceua::{minimize, Config};
 use std::time::Duration;
 
-#[cfg(feature = "parallel")]
-use sceua::minimize_parallel;
-
 fn goldstein_price_config() -> Config {
     Config {
         max_evaluations: 5_000,
@@ -56,19 +53,6 @@ fn bench_goldstein_price(c: &mut Criterion) {
         })
     });
 
-    #[cfg(feature = "parallel")]
-    group.bench_function("parallel", |b| {
-        b.iter(|| {
-            minimize_parallel(
-                black_box(goldstein_price),
-                black_box(&[-2.0, -2.0]),
-                black_box(&[2.0, 2.0]),
-                config.clone(),
-            )
-            .unwrap()
-        })
-    });
-
     group.finish();
 }
 
@@ -80,19 +64,6 @@ fn bench_rosenbrock(c: &mut Criterion) {
     group.bench_function("serial", |b| {
         b.iter(|| {
             minimize(
-                black_box(rosenbrock),
-                black_box(&[-5.0, -5.0]),
-                black_box(&[5.0, 5.0]),
-                config.clone(),
-            )
-            .unwrap()
-        })
-    });
-
-    #[cfg(feature = "parallel")]
-    group.bench_function("parallel", |b| {
-        b.iter(|| {
-            minimize_parallel(
                 black_box(rosenbrock),
                 black_box(&[-5.0, -5.0]),
                 black_box(&[5.0, 5.0]),
@@ -124,19 +95,6 @@ fn bench_griewank_10d(c: &mut Criterion) {
         })
     });
 
-    #[cfg(feature = "parallel")]
-    group.bench_function("parallel", |b| {
-        b.iter(|| {
-            minimize_parallel(
-                black_box(griewank_duan),
-                black_box(&lower),
-                black_box(&upper),
-                config.clone(),
-            )
-            .unwrap()
-        })
-    });
-
     group.finish();
 }
 
@@ -157,19 +115,6 @@ fn bench_shekel(c: &mut Criterion) {
         })
     });
 
-    #[cfg(feature = "parallel")]
-    group.bench_function("parallel", |b| {
-        b.iter(|| {
-            minimize_parallel(
-                black_box(shekel),
-                black_box(&[0.0, 0.0, 0.0, 0.0]),
-                black_box(&[10.0, 10.0, 10.0, 10.0]),
-                config.clone(),
-            )
-            .unwrap()
-        })
-    });
-
     group.finish();
 }
 
@@ -181,19 +126,6 @@ fn bench_hartman_6d(c: &mut Criterion) {
     group.bench_function("serial", |b| {
         b.iter(|| {
             minimize(
-                black_box(hartman),
-                black_box(&[0.0; 6]),
-                black_box(&[1.0; 6]),
-                config.clone(),
-            )
-            .unwrap()
-        })
-    });
-
-    #[cfg(feature = "parallel")]
-    group.bench_function("parallel", |b| {
-        b.iter(|| {
-            minimize_parallel(
                 black_box(hartman),
                 black_box(&[0.0; 6]),
                 black_box(&[1.0; 6]),

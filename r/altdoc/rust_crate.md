@@ -28,10 +28,8 @@ println!("value = {}", result.best_f);
 
 ## Features
 
-- `minimize(f, lower, upper, config)` — serial optimisation of a bounded
-  objective function.
-- `minimize_parallel(f, lower, upper, config)` — parallel evaluation of the
-  initial population when the `parallel` feature is enabled.
+- `minimize(f, lower, upper, config)` — optimisation of a bounded objective
+  function.
 - Configurable population geometry, convergence criteria, and initial point.
 - Deterministic, Fortran-compatible RAN1 random number generator for reproducible
   results.
@@ -55,25 +53,6 @@ println!("value = {}", result.best_f);
 
 Here `n` is the number of parameters (the length of `lower`/`upper`).
 
-## Parallel evaluation
-
-Enable the `parallel` feature to evaluate the initial population in parallel:
-
-```toml
-[dependencies]
-sceua = { version = "0.0.1", features = ["parallel"] }
-```
-
-```rust
-use sceua::{minimize_parallel, Config};
-
-let result = minimize_parallel(
-    |x| x.iter().map(|v| v * v).sum::<f64>(),
-    &[-5.0, -5.0, -5.0],
-    &[5.0, 5.0, 5.0],
-    Config::default(),
-)?;
-```
 
 ## Return value
 
@@ -94,25 +73,15 @@ Run the test suite:
 
 ```sh
 cargo test -p sceua --locked
-cargo test -p sceua --all-features --locked
 ```
 
 ## Benchmarks
 
-Criterion benchmarks comparing serial and parallel execution on Duan's test
-problems live in `benches/benchmark.rs`:
+Criterion benchmarks for Duan's test problems live in `benches/benchmark.rs`:
 
 ```sh
-# Serial only
 cargo bench -p sceua
-
-# Serial vs parallel
-cargo bench -p sceua --features parallel
 ```
-
-The `parallel` feature only parallelises the initial population evaluation, so
-the largest speed-ups appear for expensive objective functions or higher-
-dimensional problems with larger initial populations.
 
 ## References
 
