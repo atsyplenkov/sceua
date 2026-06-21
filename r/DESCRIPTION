@@ -4,7 +4,7 @@ Version: 0.1.0
 Authors@R:
     person("Anatoly", "Tsyplenkov", , "atsyplenkov@fastmail.com", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0003-4144-8402"))
-Description: Provides an R interface to a Rust implementation of the
+Description: Provides an 'R' interface to a 'Rust' implementation of the
     Shuffled Complex Evolution - University of Arizona (SCE-UA) global
     optimization algorithm. SCE-UA combines simplex search, competitive
     evolution, and complex shuffling to solve nonlinear, non-convex,
