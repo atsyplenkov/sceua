@@ -2,7 +2,7 @@
 name = "sceua"
 version.workspace = true
 edition.workspace = true
-rust-version.workspace = true
+rust-version = "1.81"
 description = "Shuffled Complex Evolution - University of Arizona global optimizer"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
