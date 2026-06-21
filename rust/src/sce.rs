@@ -292,7 +292,7 @@ where
 
         if best_by_loop.len() > resolved.kstop {
             let current = *best_by_loop.last().expect("best_by_loop is not empty");
-            let old = best_by_loop[best_by_loop.len() - resolved.kstop - 1];
+            let old = best_by_loop[0];
             let denominator = (old + current).abs() / 2.0;
             let timeout = if denominator == 0.0 {
                 if old == current {
@@ -312,6 +312,7 @@ where
                     history,
                 ));
             }
+            best_by_loop.remove(0);
         }
 
         if next_stats.geometric_range <= resolved.parameter_epsilon {
