@@ -84,3 +84,11 @@ render:
 # Preview the documentation website locally
 preview:
     cd r && Rscript -e "altdoc::preview_docs()"
+
+# Rust docs
+docs:
+    cargo doc -p sceua \
+        --no-deps \
+        --all-features \
+        --locked \
+        --open

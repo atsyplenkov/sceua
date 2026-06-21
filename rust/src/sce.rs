@@ -12,37 +12,67 @@ use crate::{
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
+/// Final parameter estimate, criterion value, and search metadata.
 #[derive(Clone, Debug, PartialEq)]
 pub struct OptimizationResult {
+    /// Best point found by the optimization search.
     pub best_x: Vec<f64>,
+    /// Function value of `best_x`.
     pub best_f: f64,
+    /// Number of function evaluations used.
     pub evaluations: usize,
+    /// Number of completed shuffling loops.
     pub loops: usize,
+    /// Reason the search terminated.
     pub termination: TerminationReason,
+    /// Results recorded for the initial population and each shuffling loop.
     pub history: Vec<HistoryEntry>,
 }
 
+/// Population summary recorded after shuffling loops.
 #[derive(Clone, Debug, PartialEq)]
 pub struct HistoryEntry {
+    /// Shuffling-loop index. The initial population is recorded as loop `0`.
     pub loop_index: usize,
+    /// Number of function evaluations used at this loop.
     pub evaluations: usize,
+    /// Number of complexes in the current population.
     pub complexes: usize,
+    /// Best criterion value in the current population.
     pub best_f: f64,
+    /// Worst criterion value in the current population.
     pub worst_f: f64,
+    /// Normalized geometric mean of parameter ranges.
     pub geometric_range: f64,
+    /// Best point in the current population.
     pub best_x: Vec<f64>,
 }
 
+/// Search termination condition.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TerminationReason {
+    /// Search terminated because the limit on the maximum number of trials was
+    /// exceeded.
     MaxEvaluations,
+    /// Optimization terminated because the criterion value has not changed by
+    /// the configured percentage in the configured number of shuffling loops.
     ObjectiveConvergence,
+    /// Optimization terminated because the population has converged into a
+    /// sufficiently small percentage of the feasible space.
     ParameterConvergence,
 }
 
-// SCEUA main routine.
-// https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L152-L399
-
+/// Run the Shuffled Complex Evolution method for global optimization.
+///
+/// The objective function receives a parameter set and must return the
+/// criterion value to minimize. `lower` and `upper` are the lower and upper
+/// bounds on the parameters.
+///
+/// This follows Duan's SCE-UA main routine: generate an initial population,
+/// arrange points in order of increasing function value, evolve complexes,
+/// shuffle, and stop when one of the convergence checks is satisfied.
+///
+/// Source routine: <https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L152-L399>
 pub fn minimize<F>(
     mut objective: F,
     lower: &[f64],
@@ -68,6 +98,12 @@ where
     )
 }
 
+/// Run SCE-UA with parallel evaluation of the initial population.
+///
+/// After the initial population has been evaluated, the search follows the
+/// serial SCE-UA loop order. This keeps the shuffled-complex evolution
+/// deterministic for pure objective functions while allowing expensive initial
+/// criterion evaluations to use Rayon.
 #[cfg(feature = "parallel")]
 pub fn minimize_parallel<F>(
     objective: F,

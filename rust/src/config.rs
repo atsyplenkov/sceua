@@ -1,18 +1,49 @@
 use crate::error::SceuaError;
 
+/// SCE-UA algorithmic control and convergence-check parameters.
+///
+/// The field names mirror the input argument variables in Duan's Fortran
+/// implementation where practical.
 #[derive(Debug, Clone)]
 pub struct Config {
+    /// Maximum number of trials allowed before optimization is terminated.
     pub max_evaluations: usize,
+    /// Number of shuffling loops in which the criterion value must change by
+    /// the given percentage before optimization is terminated.
     pub kstop: usize,
+    /// Fractional percentage by which the criterion value must change in
+    /// `kstop` shuffling loops.
+    ///
+    /// For example, `0.01` means one percent.
     pub pcento: f64,
+    /// Initial random seed.
     pub seed: i64,
+    /// Number of complexes in the initial population.
     pub complexes: usize,
+    /// Number of points in each complex.
+    ///
+    /// Defaults to `2 * n + 1`, where `n` is the number of parameters.
     pub points_per_complex: Option<usize>,
+    /// Number of points in a sub-complex.
+    ///
+    /// Defaults to `n + 1`, where `n` is the number of parameters.
     pub simplex_size: Option<usize>,
+    /// Number of evolution steps allowed for each complex before complex
+    /// shuffling.
+    ///
+    /// Defaults to `points_per_complex`.
     pub evolution_steps: Option<usize>,
+    /// Minimum number of complexes required if the number of complexes is
+    /// allowed to reduce as the optimization proceeds.
+    ///
+    /// Defaults to `complexes`.
     pub min_complexes: Option<usize>,
+    /// Flag on whether to include the initial point in the population.
     pub include_initial: bool,
+    /// Initial parameter set.
     pub initial_point: Option<Vec<f64>>,
+    /// Parameter convergence threshold for the normalized geometric mean of
+    /// parameter ranges.
     pub parameter_epsilon: f64,
 }
 

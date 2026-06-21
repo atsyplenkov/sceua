@@ -1,23 +1,38 @@
 use std::{error::Error, fmt};
 
+/// Errors returned by the SCE-UA optimizer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SceuaError {
+    /// No parameters were supplied for optimization.
     EmptyProblem,
+    /// Lower and upper parameter-bound vectors have different lengths.
     BoundsLengthMismatch {
+        /// Number of lower bounds supplied.
         lower: usize,
+        /// Number of upper bounds supplied.
         upper: usize,
     },
+    /// Initial parameter set length does not match the number of parameters.
     InitialPointLengthMismatch {
+        /// Expected number of parameters.
         expected: usize,
+        /// Actual number of values in the initial point.
         actual: usize,
     },
+    /// Lower or upper bound on a parameter is invalid.
     InvalidBounds {
+        /// Zero-based parameter index.
         index: usize,
+        /// Lower bound on the parameter.
         lower: f64,
+        /// Upper bound on the parameter.
         upper: f64,
     },
+    /// Algorithmic control or convergence-check parameter is invalid.
     InvalidConfig(&'static str),
+    /// Objective function returned a non-finite criterion value.
     NonFiniteObjective {
+        /// Non-finite value returned by the objective function.
         value: f64,
     },
 }
