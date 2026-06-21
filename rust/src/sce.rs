@@ -3,7 +3,7 @@ use crate::{
     config::{Config, ResolvedConfig},
     error::SceuaError,
     population::{
-        compress_complexes, parameter_stats, random_point, sample_simplex_indices, sort_points,
+        compress_complexes, parameter_stats, random_point, sample_simplex_indices, sort_points, ParameterStats,
         Point,
     },
     rng::DuanRng,
@@ -195,14 +195,14 @@ where
     let mut current_complexes = resolved.complexes;
     let mut evaluations = evaluations;
     let mut history = Vec::new();
+    let mut current_stats = parameter_stats(&population, lower, upper);
     push_history(
         &mut history,
         0,
         evaluations,
         current_complexes,
         &population,
-        lower,
-        upper,
+        &current_stats,
     );
 
     if evaluations >= resolved.max_evaluations {
@@ -215,7 +215,6 @@ where
         ));
     }
 
-    let mut current_stats = parameter_stats(&population, lower, upper);
     if current_stats.geometric_range <= resolved.parameter_epsilon {
         return Ok(result(
             population,
@@ -286,14 +285,14 @@ where
         }
 
         sort_points(&mut population);
+        let next_stats = parameter_stats(&population, lower, upper);
         push_history(
             &mut history,
             loops,
             evaluations,
             current_complexes,
             &population,
-            lower,
-            upper,
+            &next_stats,
         );
         best_by_loop.push(population[0].value);
 
@@ -331,7 +330,6 @@ where
             }
         }
 
-        let next_stats = parameter_stats(&population, lower, upper);
         if next_stats.geometric_range <= resolved.parameter_epsilon {
             return Ok(result(
                 population,
@@ -444,10 +442,8 @@ fn push_history(
     evaluations: usize,
     complexes: usize,
     population: &[Point],
-    lower: &[f64],
-    upper: &[f64],
+    stats: &ParameterStats,
 ) {
-    let stats = parameter_stats(population, lower, upper);
     let best = &population[0];
     let worst = population.last().expect("population is not empty");
     history.push(HistoryEntry {
