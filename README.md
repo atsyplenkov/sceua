@@ -1,10 +1,10 @@
 <h1 align=center><code>sceua</code></h1>
 
 <p align="center">
-    <!--<a href="https://github.com/atsyplenkov/sceua/releases">
+    <a href="https://github.com/atsyplenkov/sceua/releases">
         <img src="https://img.shields.io/github/v/release/atsyplenkov/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=GitHub&logoColor=white"></a>
     <a href="https://crates.io/crates/sceua/">
-        <img src="https://img.shields.io/crates/v/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>-->
+        <img src="https://img.shields.io/crates/v/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>
     <a href="https://codecov.io/gh/atsyplenkov/sceua">
         <img src="https://img.shields.io/codecov/c/gh/atsyplenkov/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Codecov&logoColor=white"></a>
     <br>
