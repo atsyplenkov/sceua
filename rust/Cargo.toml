@@ -13,7 +13,7 @@ keywords = ["optimization", "sce", "sce-ua", "duan"]
 categories = ["algorithms", "science"]
 
 [lib]
-crate-type = ["lib", "staticlib"]
+crate-type = ["lib"]
 
 [dev-dependencies]
 criterion = { version = "0.5", default-features = false, features = [
