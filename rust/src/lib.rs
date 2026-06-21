@@ -29,7 +29,6 @@
 
 mod cce;
 mod config;
-#[doc(hidden)]
 pub mod duan_test_func;
 mod error;
 mod population;
