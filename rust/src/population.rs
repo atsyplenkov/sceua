@@ -90,24 +90,58 @@ pub(crate) fn normalized_distances(
 // linear-probability sub-complex sampling before SORT1.
 // See https://github.com/naddor/fuse/blob/e5fe0fbed82125eec4711854e1c5492da254df41/build/FUSE_SRC/FUSE_SCE/sce.f#L240-L267
 
+#[derive(Debug, Default)]
+pub(crate) struct SimplexSampler {
+    indices: Vec<usize>,
+    marks: Vec<u32>,
+    generation: u32,
+}
+
+impl SimplexSampler {
+    pub(crate) fn sample(
+        &mut self,
+        points_per_complex: usize,
+        simplex_size: usize,
+        rng: &mut DuanRng,
+    ) -> &[usize] {
+        self.indices.clear();
+
+        if simplex_size == points_per_complex {
+            self.indices.extend(0..simplex_size);
+            return &self.indices;
+        }
+
+        if self.marks.len() < points_per_complex {
+            self.marks.resize(points_per_complex, 0);
+        }
+        self.generation = self.generation.wrapping_add(1);
+        if self.generation == 0 {
+            self.marks.fill(0);
+            self.generation = 1;
+        }
+
+        while self.indices.len() < simplex_size {
+            let candidate = sample_rank(points_per_complex, rng);
+            if self.marks[candidate] != self.generation {
+                self.marks[candidate] = self.generation;
+                self.indices.push(candidate);
+            }
+        }
+        self.indices.sort_unstable();
+        &self.indices
+    }
+}
+
+#[cfg(test)]
 pub(crate) fn sample_simplex_indices(
     points_per_complex: usize,
     simplex_size: usize,
     rng: &mut DuanRng,
 ) -> Vec<usize> {
-    if simplex_size == points_per_complex {
-        return (0..simplex_size).collect();
-    }
-
-    let mut indices = Vec::with_capacity(simplex_size);
-    while indices.len() < simplex_size {
-        let candidate = sample_rank(points_per_complex, rng);
-        if !indices.contains(&candidate) {
-            indices.push(candidate);
-        }
-    }
-    indices.sort_unstable();
-    indices
+    let mut sampler = SimplexSampler::default();
+    sampler
+        .sample(points_per_complex, simplex_size, rng)
+        .to_vec()
 }
 
 // COMP drops the lowest-ranked complex during reduction.

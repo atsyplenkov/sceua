@@ -3,8 +3,8 @@ use crate::{
     config::{Config, ResolvedConfig},
     error::SceuaError,
     population::{
-        compress_complexes, parameter_stats, random_point, sample_simplex_indices, sort_points, ParameterStats,
-        Point,
+        compress_complexes, parameter_stats, random_point, sort_points, ParameterStats, Point,
+        SimplexSampler,
     },
     rng::DuanRng,
 };
@@ -223,6 +223,7 @@ where
     }
 
     let mut best_by_loop = Vec::new();
+    let mut sampler = SimplexSampler::default();
     let mut loops = 0usize;
 
     loop {
@@ -241,11 +242,8 @@ where
                     break;
                 }
 
-                let simplex_indices = sample_simplex_indices(
-                    resolved.points_per_complex,
-                    resolved.simplex_size,
-                    &mut rng,
-                );
+                let simplex_indices =
+                    sampler.sample(resolved.points_per_complex, resolved.simplex_size, &mut rng);
                 let mut simplex: Vec<_> = simplex_indices
                     .iter()
                     .map(|&index| complex[index].clone())
