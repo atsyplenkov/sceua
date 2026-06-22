@@ -44,7 +44,17 @@ lint-r:
 
 # Update R documentation (re-run roxygen2)
 document:
-    cd r && Rscript -e "roxygen2::roxygenize(load_code = NULL)"
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    cp r/src/rust/Cargo.toml r/src/rust/Cargo.toml.bak
+    cleanup() {
+        mv r/src/rust/Cargo.toml.bak r/src/rust/Cargo.toml
+        rm -rf r/src/rust/rust r/src/rust/vendor r/src/.cargo
+    }
+    trap cleanup EXIT
+    cd r && Rscript bootstrap.R
+    cd ..
+    R CMD -e "devtools::document()"
 
 # Build and test the R package.
 # Bootstraps and vendors the Rust workspace into the R package source,
