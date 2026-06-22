@@ -1,8 +1,9 @@
 ## Test environments
 
-* local Arch Linux, R 4.6.0 (release)
+* local Arch Linux, R 4.6.0 (release) with `--as-cran`
+* Winbuilder (R-devel, Windows Server 2022 x64)
 * GitHub Actions: macOS-latest, windows-latest, ubuntu-latest (release, oldrel-1)
-  via `r-lib/actions/check-r-package@v2` with `--no-manual`
+  via `r-lib/actions/check-r-package@v2`
 
 ## R CMD check results
 
@@ -11,6 +12,10 @@
 ### NOTE: New submission
 
 This is the first submission of `sceua`.
+
+CRAN incoming feasibility also flags `Duan`, `SCE`, `UA`, `et`, `al`,
+and `hydrological` as possibly misspelled words in DESCRIPTION. These
+are an author name, well-known acronyms, and correct English.
 
 ## Dependencies
 
