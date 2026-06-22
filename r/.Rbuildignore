@@ -18,3 +18,4 @@
 ^_quarto$
 ^vignettes/benchmarks\.qmd$
 ^vignettes/benchmarks_files$
+^vignettes/
