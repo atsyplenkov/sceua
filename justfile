@@ -46,14 +46,46 @@ lint-r:
 document:
     #!/usr/bin/env bash
     set -euxo pipefail
-    cp r/src/rust/Cargo.toml r/src/rust/Cargo.toml.bak
+    # Files modified by bootstrap / compilation that should be restored
+    backup_and_restore() {
+        local file="$1"
+        if [ -f "$file" ]; then
+            cp "$file" "$file.bak"
+        fi
+    }
+    restore() {
+        local file="$1"
+        if [ -f "$file.bak" ]; then
+            mv "$file.bak" "$file"
+        fi
+    }
+    tracked_files=(
+        "r/src/rust/Cargo.toml"
+        "r/src/rust/Cargo.lock"
+        "r/src/rust/vendor-config.toml"
+        "r/src/rust/vendor.tar.xz"
+        "r/src/Makevars"
+        "r/src/Makevars.win"
+    )
+    for f in "${tracked_files[@]}"; do
+        backup_and_restore "$f"
+    done
     cleanup() {
-        mv r/src/rust/Cargo.toml.bak r/src/rust/Cargo.toml
-        rm -rf r/src/rust/rust r/src/rust/vendor r/src/.cargo
+        for f in "${tracked_files[@]}"; do
+            restore "$f"
+        done
+        rm -rf \
+            r/src/rust/rust \
+            r/src/rust/target \
+            r/src/rust/vendor \
+            r/src/.cargo \
+            r/src/entrypoint.o \
+            r/src/sceua.so
     }
     trap cleanup EXIT
     cd r && Rscript bootstrap.R
-    Rscript -e "devtools::document()"
+    cd ..
+    Rscript -e "devtools::document(pkg = 'r')"
 
 # Build and test the R package.
 # Bootstraps and vendors the Rust workspace into the R package source,
