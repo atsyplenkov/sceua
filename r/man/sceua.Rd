@@ -41,7 +41,6 @@ change by \code{pcento} before convergence.}
 
 \item{pcento}{Objective convergence threshold.}
 
-
 \item{complexes}{Number of complexes in the initial population.}
 
 \item{points_per_complex}{Number of points in each complex. Defaults to
@@ -73,7 +72,7 @@ An object of class \code{sceua}: a list with components:
 }
 \description{
 Find the parameter set that minimizes an objective function using the
-Shuffled Complex Evolution - University of Arizona algorithm
+Shuffled Complex Evolution - University of Arizona (SCE-UA) algorithm
 (Duan et al., 1992).
 }
 \details{
@@ -81,7 +80,7 @@ The R wrapper draws the internal SCE-UA seed from R's global random number
 generator. Call \code{set.seed()} before \code{sceua()} for reproducible results.
 }
 \examples{
-set.seed(1969)
+set.seed(1234)
 # Two-dimensional sphere
 result <- sceua(
   fn = function(x) sum(x^2),

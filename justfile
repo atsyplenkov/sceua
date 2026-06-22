@@ -53,8 +53,7 @@ document:
     }
     trap cleanup EXIT
     cd r && Rscript bootstrap.R
-    cd ..
-    R CMD -e "devtools::document()"
+    Rscript -e "devtools::document()"
 
 # Build and test the R package.
 # Bootstraps and vendors the Rust workspace into the R package source,
