@@ -42,6 +42,10 @@ rust-bench:
 lint-r:
     cd r && jarl check .
 
+# Update R documentation (re-run roxygen2)
+document:
+    cd r && Rscript -e "roxygen2::roxygenize(load_code = NULL)"
+
 # Build and test the R package.
 # Bootstraps and vendors the Rust workspace into the R package source,
 # then restores the original development Cargo.toml on exit.
@@ -57,7 +61,7 @@ test-r:
     cd r && Rscript bootstrap.R
     cd ..
     R CMD build r
-    R CMD check --no-manual sceua_*.tar.gz
+    R CMD check --as-cran sceua_*.tar.gz
     rm -rf sceua_*.tar.gz sceua.Rcheck
 
 # Build and install the R package locally.
