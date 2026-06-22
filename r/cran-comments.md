@@ -17,7 +17,7 @@ This is the first submission of `sceua`.
 Rust dependencies are vendored via `rextendr::vendor_crates()` and
 built offline with `cargo build --offline`. No Rust crates are
 downloaded during installation. The source tarball is approximately
-0.55 MB; development-only Rust dependencies and benchmarks are stripped
+0.55 MB. Development-only Rust dependencies and benchmarks are stripped
 from the bootstrapped CRAN source before vendoring and remain available
 in the repository's Rust crate.
 

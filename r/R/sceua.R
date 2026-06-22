@@ -2,7 +2,7 @@
 #'
 #' @description
 #' Find the parameter set that minimizes an objective function using the
-#' Shuffled Complex Evolution - University of Arizona algorithm
+#' Shuffled Complex Evolution - University of Arizona (SCE-UA) algorithm
 #' (Duan et al., 1992).
 #'
 #' @param fn Function to minimize. Must accept a single numeric vector of
@@ -50,7 +50,7 @@
 #' @export
 #'
 #' @examples
-#' set.seed(1969)
+#' set.seed(1234)
 #' # Two-dimensional sphere
 #' result <- sceua(
 #'   fn = function(x) sum(x^2),

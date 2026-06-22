@@ -6,7 +6,7 @@ Authors@R:
            comment = c(ORCID = "0000-0003-4144-8402"))
 Description: Provides an 'R' interface to a 'Rust' implementation of the
     Shuffled Complex Evolution - University of Arizona (SCE-UA) global
-    optimization algorithm. SCE-UA combines simplex search, competitive
+    optimization algorithm (Duan et al., 1992). SCE-UA combines simplex search, competitive
     evolution, and complex shuffling to solve nonlinear, non-convex,
     continuous parameter estimation problems. The method is commonly used
     for calibrating hydrological and environmental models and follows the
