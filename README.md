@@ -5,13 +5,15 @@
         <img src="https://img.shields.io/github/v/release/atsyplenkov/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=GitHub&logoColor=white"></a>
     <a href="https://crates.io/crates/sceua/">
         <img src="https://img.shields.io/crates/v/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>
-    <a href="https://codecov.io/gh/atsyplenkov/sceua">
-        <img src="https://img.shields.io/codecov/c/gh/atsyplenkov/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Codecov&logoColor=white"></a>
     <br>
     <a href="https://github.com/atsyplenkov/sceua/actions/workflows/ci.yaml">
         <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/ci.yaml?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>
     <a href="https://github.com/atsyplenkov/sceua/actions/workflows/R-CMD-check.yaml">
         <img src="https://img.shields.io/github/actions/workflow/status/atsyplenkov/sceua/R-CMD-check.yaml?style=flat&labelColor=1C2C2E&color=276DC3&logo=R&logoColor=white"></a>
+    <a href="https://cran.r-project.org/web/packages/sceua/index.html">
+        <img src="https://img.shields.io/cran/v/sceua?style=flat&labelColor=1C2C2E&color=276DC3&logo=R&logoColor=white"></a>
+    <a href="https://cran.r-project.org/web/packages/sceua/index.html">
+        <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fcranlogs.r-pkg.org%2Fdownloads%2Ftotal%2F2013-04-01%3Alast-day%2Fsceua&query=%24%5B0%5D.downloads&label=downloads&style=flat&labelColor=1C2C2E&color=276DC3&logo=R&logoColor=white"></a>
     <!--<a href="https://docs.rs/sceua/">
         <img src="https://img.shields.io/docsrs/sceua?style=flat&labelColor=1C2C2E&color=dea584&logo=Rust&logoColor=white"></a>-->
     <br>
