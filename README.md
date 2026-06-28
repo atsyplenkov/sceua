@@ -76,8 +76,7 @@ result <- sceua(
 Install from CRAN:
 
 ```r
-# Not yet available
-# install.packages("sceua")
+install.packages("sceua")
 ```
 
 Or install the development version from GitHub (requires a Rust toolchain):
