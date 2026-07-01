@@ -409,14 +409,14 @@ dependencies = [
 
 [[package]]
 name = "sceua"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "criterion",
 ]
 
 [[package]]
 name = "sceua_r"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "extendr-api",
  "sceua",
