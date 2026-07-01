@@ -9,9 +9,10 @@
 
 0 errors | 0 warnings | 1 note
 
-### NOTE: New submission
+### Resubmission
 
-This is the first submission of `sceua`.
+This maintenance release responds to the CRAN Additional issues report for the
+BDR `donttest` check, which failed during package installation.
 
 CRAN incoming feasibility also flags `Duan`, `SCE`, `UA`, `et`, `al`, and `hydrological` as possibly misspelled words in DESCRIPTION. These are an author name, well-known acronyms, and correct English.
 
@@ -21,4 +22,4 @@ Rust dependencies are vendored via `rextendr::vendor_crates()` and built offline
 
 ## MSRV
 
-Minimum supported Rust version is 1.91.1, declared in `DESCRIPTION` (`SystemRequirements`) and enforced by `configure` via `tools/config.R`.
+Minimum supported Rust version is 1.81, declared in `DESCRIPTION` (`SystemRequirements`) and enforced by `configure` via `tools/config.R`. This corrects the previously overstated 1.91.1 requirement.
